@@ -66,6 +66,7 @@ class SeasonCard extends StatelessWidget {
                   ),
                   child: CachedNetworkImage(
                     // Use season poster if available, otherwise use series poster
+                    // ignore: unnecessary_null_comparison
                     imageUrl: season.posterPath != null
                         ? "$imageUrl${season.posterPath}"
                         : "$imageUrl${series.posterPath}",

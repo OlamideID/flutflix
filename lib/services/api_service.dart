@@ -151,7 +151,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
+        json.decode(response.body);
         return seasondetailsFromJson(response.body); // Pass the raw JSON string
       } else {
         throw Exception(
@@ -172,7 +172,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
+        json.decode(response.body);
         // Note: Episode groups have a different structure than TV series details
         // You might need a different model for this endpoint
         return seasondetailsFromJson(response.body);
