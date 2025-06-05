@@ -1,17 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:netflix/common/utils.dart';
-import 'package:netflix/helpers/helpers.dart' show ImageErrorWidget, ImagePlaceholder;
+import 'package:netflix/helpers/helpers.dart'
+    show ImageErrorWidget, ImagePlaceholder;
 import 'package:netflix/screens/series_detailscreen.dart';
 import 'package:netflix/services/api_service.dart';
 
 class SeriesCard extends StatelessWidget {
   final dynamic series;
 
-  const SeriesCard({
-    super.key,
-    required this.series,
-  });
+  const SeriesCard({super.key, required this.series});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +40,7 @@ class SeriesCard extends StatelessWidget {
     try {
       final apiService = ApiService();
       final seriesDetails = await apiService.seriesDetail(series.id);
-
+      print('Series Details: $seriesDetails');
       Navigator.of(context).pop();
 
       if (seriesDetails == null) {
@@ -60,9 +58,9 @@ class SeriesCard extends StatelessWidget {
       );
     } catch (e) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 }

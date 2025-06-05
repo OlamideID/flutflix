@@ -146,16 +146,16 @@ class ApiService {
   Future<Seasondetails?> getSeasonDetails(int seriesId) async {
     try {
       // Corrected endpoint - this should get TV series details, not episode groups
-      final response = await http.get(
-        Uri.parse('$baseUrl/tv/$seriesId?api_key=$apikey'),
-      );
+      final url = Uri.parse('${baseUrl}tv/$seriesId?api_key=$apikey');
+      final response = await http.get(url);
 
       if (response.statusCode == 200) {
         json.decode(response.body);
         return seasondetailsFromJson(response.body); // Pass the raw JSON string
       } else {
         throw Exception(
-          'Failed to load season details: ${response.statusCode}',
+          'Failed to load season details: ${response.body}'
+          ' (Status code: ${response.statusCode})',
         );
       }
     } catch (e) {
