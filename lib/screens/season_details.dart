@@ -4,7 +4,7 @@ import 'package:netflix/services/api_service.dart';
 
 class SeasonDetails extends StatefulWidget {
   const SeasonDetails({
-    super.key, 
+    super.key,
     required this.id,
     this.seasonNumber,
     this.seasonName,
@@ -72,7 +72,7 @@ class _SeasonDetailsState extends State<SeasonDetails> {
               ),
             );
           }
-          
+
           if (!snapshot.hasData || snapshot.data == null) {
             return const Center(
               child: Text(
@@ -92,15 +92,15 @@ class _SeasonDetailsState extends State<SeasonDetails> {
                 // Header Section
                 _buildHeaderSection(seasonDetails),
                 const SizedBox(height: 24),
-                
+
                 // Overview Section
                 _buildOverviewSection(seasonDetails),
                 const SizedBox(height: 24),
-                
+
                 // Details Section
                 _buildDetailsSection(seasonDetails),
                 const SizedBox(height: 24),
-                
+
                 // Seasons List
                 _buildSeasonsSection(seasonDetails),
               ],
@@ -124,29 +124,26 @@ class _SeasonDetailsState extends State<SeasonDetails> {
             color: Colors.grey[800],
           ),
           // ignore: unnecessary_null_comparison
-          child: details.posterPath != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    'https://image.tmdb.org/t/p/w500${details.posterPath}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
-                        Icons.movie,
-                        color: Colors.grey,
-                        size: 48,
-                      );
-                    },
-                  ),
-                )
-              : const Icon(
-                  Icons.movie,
-                  color: Colors.grey,
-                  size: 48,
-                ),
+          child:
+              details.posterPath != null
+                  ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      'https://image.tmdb.org/t/p/w500${details.posterPath}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.movie,
+                          color: Colors.grey,
+                          size: 48,
+                        );
+                      },
+                    ),
+                  )
+                  : const Icon(Icons.movie, color: Colors.grey, size: 48),
         ),
         const SizedBox(width: 16),
-        
+
         // Title and basic info
         Expanded(
           child: Column(
@@ -218,11 +215,7 @@ class _SeasonDetailsState extends State<SeasonDetails> {
         const SizedBox(height: 8),
         Text(
           details.overview,
-          style: TextStyle(
-            color: Colors.grey[300],
-            fontSize: 14,
-            height: 1.5,
-          ),
+          style: TextStyle(color: Colors.grey[300], fontSize: 14, height: 1.5),
         ),
       ],
     );
@@ -247,7 +240,10 @@ class _SeasonDetailsState extends State<SeasonDetails> {
         _buildDetailRow('Episodes', '${details.numberOfEpisodes}'),
         _buildDetailRow('Genres', details.genres.map((g) => g.name).join(', ')),
         if (details.networks.isNotEmpty)
-          _buildDetailRow('Networks', details.networks.map((n) => n.name).join(', ')),
+          _buildDetailRow(
+            'Networks',
+            details.networks.map((n) => n.name).join(', '),
+          ),
       ],
     );
   }
@@ -272,10 +268,7 @@ class _SeasonDetailsState extends State<SeasonDetails> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ),
         ],
@@ -326,29 +319,26 @@ class _SeasonDetailsState extends State<SeasonDetails> {
                 borderRadius: BorderRadius.circular(4),
                 color: Colors.grey[800],
               ),
-              child: season.posterPath != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.network(
-                        'https://image.tmdb.org/t/p/w200${season.posterPath}',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.tv,
-                            color: Colors.grey,
-                            size: 24,
-                          );
-                        },
-                      ),
-                    )
-                  : const Icon(
-                      Icons.tv,
-                      color: Colors.grey,
-                      size: 24,
-                    ),
+              child:
+                  season.posterPath != null
+                      ? ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.network(
+                          'https://image.tmdb.org/t/p/w200${season.posterPath}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.tv,
+                              color: Colors.grey,
+                              size: 24,
+                            );
+                          },
+                        ),
+                      )
+                      : const Icon(Icons.tv, color: Colors.grey, size: 24),
             ),
             const SizedBox(width: 12),
-            
+
             // Season info
             Expanded(
               child: Column(
@@ -365,18 +355,12 @@ class _SeasonDetailsState extends State<SeasonDetails> {
                   const SizedBox(height: 4),
                   Text(
                     '${season.episodeCount} episodes',
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _formatDate(season.airDate),
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
                   ),
                   if (season.overview.isNotEmpty) ...[
                     const SizedBox(height: 8),
