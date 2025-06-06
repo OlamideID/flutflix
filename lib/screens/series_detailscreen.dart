@@ -19,12 +19,12 @@ class SeriesDetailsScreen extends StatefulWidget {
 
 class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
   final ApiService _apiService = ApiService();
-  late Future<SeriesDetails?> _seriesFuture;
+  late final Future<SeriesDetails?> _seriesFuture;
 
   @override
   void initState() {
     super.initState();
-    _seriesFuture = _apiService.seriesDetail(widget.id);
+    _seriesFuture = _apiService.seriesDetail(widget.id); // Cached once
   }
 
   @override
@@ -69,10 +69,9 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                     children: [
                       _buildActionButtons(),
                       const SizedBox(height: 24),
-
                       if (series.tagline.isNotEmpty)
                         _buildTagline(series.tagline),
-
+                      _buildSectionTitle(series.name),
                       _buildSectionTitle('Overview'),
                       Text(
                         series.overview,
@@ -82,30 +81,22 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
                       InfoCard(series: series),
                       const SizedBox(height: 24),
-
                       if (series.genres.isNotEmpty)
                         _buildGenresSection(series.genres),
-
                       if (series.seasons.isNotEmpty)
                         _buildSeasonsSection(series.seasons, series),
-
                       if (series.lastEpisodeToAir != null)
                         _buildLastEpisodeSection(series.lastEpisodeToAir),
-
                       if (series.networks.isNotEmpty)
                         _buildNetworksSection(series.networks),
-
                       if (series.productionCompanies.isNotEmpty)
                         _buildProductionCompaniesSection(
                           series.productionCompanies,
                         ),
-
                       if (series.createdBy.isNotEmpty)
                         _buildCreatedBySection(series.createdBy),
-
                       _buildAdditionalInfoSection(series),
                     ],
                   ),
@@ -234,7 +225,6 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
               networks
                   .map(
                     (network) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         if (network.logoPath != null)
                           Image.network(
@@ -409,22 +399,4 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
       ),
     );
   }
-
-  // Future<void> _playSeries(String seriesId) async {
-  //   final url = 'https://www.themoviedb.org/tv/$seriesId';
-  //   if (await canLaunchUrl(Uri.parse(url))) {
-  //     await launchUrl(Uri.parse(url));
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Could not launch URL')),
-  //     );
-  //   }
-  // }
-
-  // void _addToMyList() {
-  //   // Implement your "Add to My List" functionality
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text('Added to My List')),
-  //   );
-  // }
 }

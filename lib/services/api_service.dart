@@ -39,15 +39,26 @@ class ApiService {
       const endPoint = "movie/upcoming";
       final apiUrl = "$baseUrl$endPoint$key";
       final response = await http.get(Uri.parse(apiUrl));
+
       if (response.statusCode == 200) {
-        print("upcoming movie url : $apiUrl");
-        return upcomingMovieFromJson(response.body);
+        // Add this debug line to see the actual JSON structure
+        print("Raw JSON: ${response.body}");
+
+        // Try parsing with more error handling
+        try {
+          return upcomingMovieFromJson(response.body);
+        } catch (parseError) {
+          // print("JSON parsing error: $parseError");
+          // // You could try using a generic approach
+          // final Map<String, dynamic> json = jsonDecode(response.body);
+          // // print("JSON keys: ${json.keys}");
+          return null;
+        }
       } else {
-        throw Exception('wahala');
+        throw Exception('API Error: ${response.statusCode}');
       }
     } catch (e) {
-      // throw Exception('Error $e');
-      print('Wahala $e');
+      print('Error in upComingMovies: $e');
       return null;
     }
   }
@@ -94,7 +105,7 @@ class ApiService {
       final apiUrl = "$baseUrl$endPoint$key";
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
-        print("upcoming movie url : $apiUrl");
+        print("trending movie url : $apiUrl");
         return trendingFromJson(response.body);
       } else {
         throw Exception('wahala');
