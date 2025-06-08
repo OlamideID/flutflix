@@ -42,7 +42,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         // Add this debug line to see the actual JSON structure
-        print("Raw JSON: ${response.body}");
+        // print("Raw JSON: ${response.body}");
 
         // Try parsing with more error handling
         try {

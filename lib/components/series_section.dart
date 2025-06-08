@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/components/cards/series_card.dart';
-import 'package:netflix/models/popular_series.dart';
 import 'package:netflix/screens/home.dart';
 
-class SeriesSection extends StatelessWidget {
-  final Future<PopularTvSeries?> future;
+class SeriesSection extends ConsumerWidget {
   final String sectionTitle;
   final bool isReverse;
+  final FutureProvider provider;
 
   const SeriesSection({
     super.key,
-    required this.future,
+    required this.provider,
     required this.sectionTitle,
     this.isReverse = false,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncSeries = ref.watch(provider);
+
     return Padding(
       padding: const EdgeInsets.only(left: 10, top: 20),
       child: Column(
@@ -26,27 +28,15 @@ class SeriesSection extends StatelessWidget {
           const SizedBox(height: 10),
           SizedBox(
             height: 180,
-            child: FutureBuilder<PopularTvSeries?>(
-              future: future,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingIndicator();
-                } else if (snapshot.hasError) {
-                  return ErrorDisplay(error: snapshot.error.toString());
-                } else if (snapshot.hasData) {
-                  final seriesList = snapshot.data!.results;
-
-                  if (seriesList.isEmpty) {
-                    return const NoDataDisplay(message: 'No series found');
-                  }
-
-                  return SeriesList(
-                    seriesList: seriesList,
-                    isReverse: isReverse,
-                  );
-                } else {
-                  return const NoDataDisplay();
+            child: asyncSeries.when(
+              loading: () => const LoadingIndicator(),
+              error: (e, _) => ErrorDisplay(error: e.toString()),
+              data: (data) {
+                final series = data?.results ?? [];
+                if (series.isEmpty) {
+                  return const NoDataDisplay(message: 'No series found');
                 }
+                return SeriesList(seriesList: series, isReverse: isReverse);
               },
             ),
           ),
@@ -55,6 +45,7 @@ class SeriesSection extends StatelessWidget {
     );
   }
 }
+
 
 // widgets/common/section_title.dart
 class SectionTitle extends StatelessWidget {

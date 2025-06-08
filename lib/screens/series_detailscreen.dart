@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_null_comparison
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/components/episode_card.dart';
 import 'package:netflix/components/header_section.dart';
 import 'package:netflix/components/info_card.dart';
@@ -9,45 +10,41 @@ import 'package:netflix/models/series_details.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class SeriesDetailsScreen extends StatefulWidget {
+final seriesDetailsProvider = FutureProvider.family<SeriesDetails?, int>((
+  ref,
+  id,
+) async {
+  final api = ApiService();
+  return await api.seriesDetail(id);
+});
+
+class SeriesDetailsScreen extends ConsumerStatefulWidget {
   const SeriesDetailsScreen({super.key, required this.id});
   final int id;
 
   @override
-  State<SeriesDetailsScreen> createState() => _SeriesDetailsScreenState();
+  ConsumerState<SeriesDetailsScreen> createState() =>
+      _SeriesDetailsScreenState();
 }
 
-class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
-  final ApiService _apiService = ApiService();
-  late final Future<SeriesDetails?> _seriesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _seriesFuture = _apiService.seriesDetail(widget.id); // Cached once
-  }
-
+class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   @override
   Widget build(BuildContext context) {
+    final seriesAsync = ref.watch(seriesDetailsProvider(widget.id));
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: FutureBuilder<SeriesDetails?>(
-        future: _seriesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
+      body: seriesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error:
+            (error, _) => Center(
               child: Text(
-                'Error loading series: ${snapshot.error}',
+                'Error loading series: $error',
                 style: const TextStyle(color: Colors.white),
               ),
-            );
-          }
-
-          if (!snapshot.hasData) {
+            ),
+        data: (series) {
+          if (series == null) {
             return const Center(
               child: Text(
                 'No series data available',
@@ -55,8 +52,6 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
               ),
             );
           }
-
-          final series = snapshot.data!;
 
           return CustomScrollView(
             slivers: [
@@ -222,25 +217,23 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
           spacing: 12,
           runSpacing: 12,
           children:
-              networks
-                  .map(
-                    (network) => Column(
-                      children: [
-                        if (network.logoPath != null)
-                          Image.network(
-                            'https://image.tmdb.org/t/p/w92${network.logoPath}',
-                            width: 80,
-                            height: 40,
-                            fit: BoxFit.contain,
-                          ),
-                        Text(
-                          network.name,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
+              networks.map((network) {
+                return Column(
+                  children: [
+                    if (network.logoPath != null)
+                      Image.network(
+                        'https://image.tmdb.org/t/p/w92${network.logoPath}',
+                        width: 80,
+                        height: 40,
+                        fit: BoxFit.contain,
+                      ),
+                    Text(
+                      network.name,
+                      style: const TextStyle(color: Colors.white),
                     ),
-                  )
-                  .toList(),
+                  ],
+                );
+              }).toList(),
         ),
         const SizedBox(height: 24),
       ],
@@ -256,25 +249,23 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
           spacing: 12,
           runSpacing: 12,
           children:
-              companies
-                  .map(
-                    (company) => Column(
-                      children: [
-                        if (company.logoPath != null)
-                          Image.network(
-                            'https://image.tmdb.org/t/p/w92${company.logoPath}',
-                            width: 80,
-                            height: 40,
-                            fit: BoxFit.contain,
-                          ),
-                        Text(
-                          company.name,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
+              companies.map((company) {
+                return Column(
+                  children: [
+                    if (company.logoPath != null)
+                      Image.network(
+                        'https://image.tmdb.org/t/p/w92${company.logoPath}',
+                        width: 80,
+                        height: 40,
+                        fit: BoxFit.contain,
+                      ),
+                    Text(
+                      company.name,
+                      style: const TextStyle(color: Colors.white),
                     ),
-                  )
-                  .toList(),
+                  ],
+                );
+              }).toList(),
         ),
         const SizedBox(height: 24),
       ],

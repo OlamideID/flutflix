@@ -1,54 +1,72 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/components/featured_movie_card.dart';
-import 'package:netflix/models/movie_model.dart';
+import 'package:netflix/providers/providers.dart';
 
-class FeaturedMovieCarousel extends StatelessWidget {
-  final Future<Movie?> movieData;
-
-  const FeaturedMovieCarousel({
-    super.key,
-    required this.movieData,
-  });
+class FeaturedMovieCarousel extends ConsumerWidget {
+  const FeaturedMovieCarousel({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
+
+    int itemsToShow;
+    if (screenWidth >= 1200) {
+      itemsToShow = 3; // Desktop
+    }
+    //else if (screenWidth >= 750) {
+    //   itemsToShow = 2; // Tablet
+    // }
+    else {
+      itemsToShow = 1; // Mobile
+    }
+
+    final movieAsyncValue = ref.watch(fetchMoviesProvider);
+
+    final width = MediaQuery.of(context).size.width;
+    print(width);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         height: 600,
-        width: double.maxFinite,
+        width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.grey.shade800),
         ),
-        child: FutureBuilder<Movie?>(
-          future: movieData,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else if (snapshot.hasData) {
-              final movies = snapshot.data?.results ?? [];
+        child: movieAsyncValue.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(child: Text('Error: $error')),
+          data: (movieData) {
+            final movies = movieData?.results ?? [];
 
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: PageView.builder(
-                  itemCount: movies.length,
-                  itemBuilder: (context, index) {
-                    final movie = movies[index];
-                    return FeaturedMovieCard(
-                      movie: movie,
-                      screenWidth: screenWidth,
-                    );
-                  },
-                ),
-              );
-            } else {
-              return const Center(child: Text('Something went wrong'));
+            if (movies.isEmpty) {
+              return const Center(child: Text('No movies found'));
             }
+
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: CarouselSlider.builder(
+                itemCount: movies.length,
+                itemBuilder: (context, index, realIndex) {
+                  final movie = movies[index];
+                  return FeaturedMovieCard(
+                    movie: movie,
+                    screenWidth: screenWidth / itemsToShow,
+                  );
+                },
+                options: CarouselOptions(
+                  height: 600,
+                  viewportFraction: 1 / itemsToShow,
+                  enableInfiniteScroll: true,
+                  enlargeCenterPage: true,
+                  autoPlay: true,
+                  autoPlayInterval: const Duration(seconds: 5),
+                ),
+              ),
+            );
           },
         ),
       ),

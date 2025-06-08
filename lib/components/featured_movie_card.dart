@@ -51,7 +51,7 @@ class FeaturedMovieCard extends StatelessWidget {
         Positioned(
           left: 30,
           right: 30,
-          bottom: 30,
+          bottom: 10,
           child: FeaturedMovieActions(movie: movie),
         ),
       ],
