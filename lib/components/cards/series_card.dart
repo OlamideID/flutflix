@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:netflix/common/utils.dart';
 import 'package:netflix/helpers/helpers.dart';
@@ -17,14 +18,25 @@ class SeriesCard extends StatelessWidget {
       onTap: () => _handleSeriesTap(context),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: CachedNetworkImage(
-          imageUrl: "$imageUrl${series.posterPath}",
-          width: 120,
-          height: 180,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => const ImagePlaceholder(),
-          errorWidget: (context, url, error) => const ImageErrorWidget(),
-        ),
+        child:
+            kIsWeb
+                ? Image.network(
+                  "$imageUrl${series.posterPath}",
+                  width: 120,
+                  height: 180,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (context, error, stackTrace) => const ImageErrorWidget(),
+                )
+                : CachedNetworkImage(
+                  imageUrl: "$imageUrl${series.posterPath}",
+                  width: 120,
+                  height: 180,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const ImagePlaceholder(),
+                  errorWidget:
+                      (context, url, error) => const ImageErrorWidget(),
+                ),
       ),
     );
   }

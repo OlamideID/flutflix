@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:netflix/common/utils.dart';
 import 'package:netflix/helpers/helpers.dart';
@@ -24,18 +25,32 @@ class MovieCard extends StatelessWidget {
         },
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
-          child: CachedNetworkImage(
-            imageUrl: "$imageUrl${movie.posterPath}",
-            width: 120,
-            height: 180,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => const ImagePlaceholder(),
-            errorWidget: (context, url, error) => const ImageErrorWidget(),
-            placeholderFadeInDuration: const Duration(milliseconds: 150),
-            fadeInDuration: const Duration(milliseconds: 200),
-            memCacheWidth: 200,
-            memCacheHeight: 300,
-          ),
+          child:
+              kIsWeb
+                  ? Image.network(
+                    "$imageUrl${movie.posterPath}",
+                    width: 120,
+                    height: 180,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (context, error, stackTrace) =>
+                            const ImageErrorWidget(),
+                  )
+                  : CachedNetworkImage(
+                    imageUrl: "$imageUrl${movie.posterPath}",
+                    width: 120,
+                    height: 180,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const ImagePlaceholder(),
+                    errorWidget:
+                        (context, url, error) => const ImageErrorWidget(),
+                    placeholderFadeInDuration: const Duration(
+                      milliseconds: 150,
+                    ),
+                    fadeInDuration: const Duration(milliseconds: 200),
+                    memCacheWidth: 200,
+                    memCacheHeight: 300,
+                  ),
         ),
       ),
     );
