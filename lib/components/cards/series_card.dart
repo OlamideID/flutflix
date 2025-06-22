@@ -28,6 +28,7 @@ class SeriesCard extends StatelessWidget {
                   errorBuilder:
                       (context, error, stackTrace) => const ImageErrorWidget(),
                 )
+                
                 : CachedNetworkImage(
                   imageUrl: "$imageUrl${series.posterPath}",
                   width: 120,
