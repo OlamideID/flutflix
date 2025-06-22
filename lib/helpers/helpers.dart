@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:js' as js;
+// import 'dart:js' as js;
 
 
 class ImagePlaceholder extends StatelessWidget {
@@ -40,15 +40,15 @@ class VideoUrlHelper {
   }
 
   static Future<void> openUrl(String url) async {
-    if (kIsWeb) {
-      js.context.callMethod('open', [url]);
-    } else {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        throw 'Could not launch $url';
-      }
+    final uri = Uri.parse(url);
+    final launchMode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
+
+    if (!await launchUrl(
+      uri,
+      mode: launchMode,
+      webOnlyWindowName: '_blank', // Opens in a new tab on web
+    )) {
+      throw 'Could not launch $url';
     }
   }
 }

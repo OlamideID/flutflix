@@ -62,8 +62,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildActionButtons(),
-                      const SizedBox(height: 24),
+                      // _buildActionButtons(),
+                      // const SizedBox(height: 24),
                       if (series.tagline.isNotEmpty)
                         _buildTagline(series.tagline),
                       _buildSectionTitle(series.name),
@@ -104,37 +104,37 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('Play'),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[900],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text('My List'),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildActionButtons() {
+  //   return Row(
+  //     children: [
+  //       Expanded(
+  //         child: ElevatedButton.icon(
+  //           onPressed: () {},
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: Colors.white,
+  //             foregroundColor: Colors.black,
+  //             padding: const EdgeInsets.symmetric(vertical: 12),
+  //           ),
+  //           icon: const Icon(Icons.play_arrow),
+  //           label: const Text('Play'),
+  //         ),
+  //       ),
+  //       const SizedBox(width: 12),
+  //       Expanded(
+  //         child: ElevatedButton.icon(
+  //           onPressed: () {},
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: Colors.grey[900],
+  //             foregroundColor: Colors.white,
+  //             padding: const EdgeInsets.symmetric(vertical: 12),
+  //           ),
+  //           icon: const Icon(Icons.add),
+  //           label: const Text('My List'),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildTagline(String tagline) {
     return Padding(

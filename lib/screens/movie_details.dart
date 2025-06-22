@@ -1,7 +1,6 @@
-import 'dart:js' as js; // Only works on web
+// import 'dart:js' as js;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
@@ -361,25 +360,25 @@ class _MovieDetailsBody extends StatelessWidget {
   }
 
   String _formatNumber(int number) {
-    if (number >= 1000000000)
+    if (number >= 1000000000) {
       return '${(number / 1000000000).toStringAsFixed(1)}B';
+    }
     if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
     if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
     return number.toString();
   }
 }
 
+// This generates the video URL using movieId
 String getVideoUrl(String movieId) => 'https://vidsrc.icu/embed/movie/$movieId';
 
 Future<void> openUrl(String url) async {
-  if (kIsWeb) {
-    js.context.callMethod('open', [url]);
-  } else {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      throw 'Could not launch $url';
-    }
+  final uri = Uri.parse(url);
+  if (!await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+    webOnlyWindowName: '_blank',
+  )) {
+    throw 'Could not launch $url';
   }
 }

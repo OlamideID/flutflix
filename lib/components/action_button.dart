@@ -7,6 +7,9 @@ class NetflixActionButton extends StatelessWidget {
   final Color iconColor;
   final String label;
   final Color textColor;
+  final double fontSize;
+  final double iconSize;
+  final double minWidth;
 
   const NetflixActionButton({
     super.key,
@@ -16,6 +19,9 @@ class NetflixActionButton extends StatelessWidget {
     required this.iconColor,
     required this.label,
     required this.textColor,
+    this.fontSize = 18,
+    this.iconSize = 30,
+    this.minWidth = 150, required double textSize,
   });
 
   @override
@@ -23,7 +29,7 @@ class NetflixActionButton extends StatelessWidget {
     return TextButton.icon(
       style: TextButton.styleFrom(
         backgroundColor: backgroundColor,
-        minimumSize: const Size(150, 50),
+        minimumSize: Size(minWidth, 50),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
         ),
@@ -32,13 +38,13 @@ class NetflixActionButton extends StatelessWidget {
       icon: Icon(
         icon,
         color: iconColor,
-        size: 30,
+        size: iconSize,
       ),
       label: Text(
         label,
         style: TextStyle(
           color: textColor,
-          fontSize: 18,
+          fontSize: fontSize,
           fontWeight: FontWeight.bold,
         ),
       ),
