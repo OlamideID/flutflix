@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconsax/iconsax.dart';
@@ -16,62 +20,90 @@ class _NavBarScreenState extends State<NavBarScreen> {
 
   final List<Widget> _screens = [
     const NetflixHome(),
-    const Scaffold(), // Replace with your actual Search screen
-    const Scaffold(
-      backgroundColor: Colors.amber,
-    ), // Replace with actual Hot News screen
+    const Scaffold(),
+    const Scaffold(backgroundColor: Colors.amber),
   ];
+
+  void _onTabChange(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Widget _buildWebNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF121212),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 30,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: GNav(
+            rippleColor: const Color(0xFF9B5DE5).withOpacity(0.2),
+            hoverColor: const Color(0xFF9B5DE5).withOpacity(0.1),
+            haptic: true,
+            gap: 8,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            duration: const Duration(milliseconds: 300),
+            tabBackgroundColor: const Color(0xFF9B5DE5).withOpacity(0.15),
+            color: Colors.grey.shade500,
+            activeColor: const Color(0xFF9B5DE5),
+            iconSize: 26,
+            backgroundColor: Colors.transparent,
+            selectedIndex: _selectedIndex,
+            onTabChange: _onTabChange,
+            tabs: const [
+              GButton(icon: Iconsax.home5, text: 'Home'),
+              GButton(icon: Iconsax.search_normal, text: 'Search'),
+              GButton(icon: Icons.photo_library, text: 'Hot News'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAndroidNavBar() {
+    return CurvedNavigationBar(
+      index: _selectedIndex,
+      height: 60,
+      backgroundColor: Colors.transparent,
+      color: Colors.black87,
+      buttonBackgroundColor: Colors.redAccent,
+      animationDuration: const Duration(milliseconds: 300),
+      animationCurve: Curves.easeInOut,
+      onTap: _onTabChange,
+      items: [
+        Icon(Iconsax.home, size: 26, color: Colors.white),
+        Icon(Iconsax.search_normal, size: 26, color: Colors.white),
+        Icon(Icons.photo_library, size: 26, color: Colors.white),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colorss.scaffoldBg,
       body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colorss.scaffoldBg,
-          border: const Border(
-            top: BorderSide(color: Colors.white12, width: 1),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: GNav(
-              rippleColor: Colorss.whiteSecondary.withOpacity(0.2),
-              hoverColor: Colors.white10,
-              haptic: true,
-              gap: 6,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              duration: const Duration(milliseconds: 250),
-              tabBackgroundColor: Colors.white.withOpacity(0.06),
-              color: Colorss.whiteSecondary,
-              activeColor: Colorss.whitePrimary,
-              iconSize: 24,
-              backgroundColor: Colors.transparent,
-              selectedIndex: _selectedIndex,
-              onTabChange: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              tabs: const [
-                GButton(icon: Iconsax.home5, text: 'Home'),
-                GButton(icon: Iconsax.search_normal, text: 'Search'),
-                GButton(icon: Icons.photo_library, text: 'Hot News'),
-              ],
-            ),
-          ),
-        ),
-      ),
+      bottomNavigationBar:
+          kIsWeb
+              ? _buildWebNavBar()
+              : Platform.isAndroid
+              ? _buildAndroidNavBar()
+              : _buildWebNavBar(),
     );
   }
 }

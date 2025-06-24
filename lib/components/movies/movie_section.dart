@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/movie_list.dart';
-import 'package:netflix/components/series_section.dart';
+import 'package:netflix/components/movies/movie_list.dart';
+import 'package:netflix/components/series/series_section.dart';
 import 'package:netflix/screens/home.dart';
 
 class MovieSection extends ConsumerWidget {

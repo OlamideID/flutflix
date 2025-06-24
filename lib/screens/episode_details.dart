@@ -318,38 +318,6 @@ class EpisodeDetailsScreen extends ConsumerWidget {
             ),
           ],
 
-          // Guest Stars Section (if available in your Episode model)
-          // if (episode.guestStars != null && episode.guestStars!.isNotEmpty) ...[
-          //   const SliverToBoxAdapter(
-          //     child: Padding(
-          //       padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-          //       child: Text(
-          //         'Guest Stars',
-          //         style: TextStyle(
-          //           color: Colors.white,
-          //           fontSize: 20,
-          //           fontWeight: FontWeight.bold,
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-          //   SliverToBoxAdapter(
-          //     child: SizedBox(
-          //       height: 120,
-          //       child: ListView.builder(
-          //         scrollDirection: Axis.horizontal,
-          //         padding: const EdgeInsets.symmetric(horizontal: 16),
-          //         itemCount: episode.guestStars!.length,
-          //         itemBuilder: (context, index) {
-          //           final person = episode.guestStars![index];
-          //           return _buildPersonCard(person);
-          //         },
-          //       ),
-          //     ),
-          //   ),
-          // ],
-
-          // Debug Information (remove in production)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -404,7 +372,6 @@ class EpisodeDetailsScreen extends ConsumerWidget {
             ),
           ),
 
-          // Bottom Padding
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
@@ -421,43 +388,4 @@ class EpisodeDetailsScreen extends ConsumerWidget {
       ],
     );
   }
-
-  // Widget _buildPersonCard(Person person) {
-  //   return Container(
-  //     width: 80,
-  //     margin: const EdgeInsets.only(right: 12),
-  //     child: Column(
-  //       children: [
-  //         ClipRRect(
-  //           borderRadius: BorderRadius.circular(40),
-  //           child: CachedNetworkImage(
-  //             imageUrl: "$imageUrl${person.profilePath}",
-  //             width: 80,
-  //             height: 80,
-  //             fit: BoxFit.cover,
-  //             placeholder: (context, url) => Container(
-  //               color: Colors.grey[800],
-  //               child: const Icon(Icons.person, color: Colors.grey),
-  //             ),
-  //             errorWidget: (context, url, error) => Container(
-  //               color: Colors.grey[800],
-  //               child: const Icon(Icons.person, color: Colors.grey),
-  //             ),
-  //           ),
-  //         ),
-  //         const SizedBox(height: 4),
-  //         Text(
-  //           person.name,
-  //           style: const TextStyle(
-  //             color: Colors.white,
-  //             fontSize: 12,
-  //           ),
-  //           textAlign: TextAlign.center,
-  //           maxLines: 2,
-  //           overflow: TextOverflow.ellipsis,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

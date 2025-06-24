@@ -22,8 +22,6 @@ final seasonDetailsProvider = FutureProvider.family<
     params.seasonNumber,
   );
 
-  // Only try fallback if the original season number was greater than 1
-  // and we got null result (which could mean the season doesn't exist)
   if (result == null && params.seasonNumber > 1) {
     debugPrint(
       'Season ${params.seasonNumber} not found, trying season 1 as fallback',
@@ -45,7 +43,6 @@ final seasonDetailsProvider = FutureProvider.family<
   return result;
 });
 
-// Optional: Provider to get external IDs (including IMDB ID)
 final externalIdsProvider = FutureProvider.family<Map<String, dynamic>?, int>((
   ref,
   seriesId,
@@ -72,14 +69,9 @@ class SeasonDetailsScreen extends ConsumerWidget {
     this.imdbId, // Optional IMDB ID
   });
 
-  /// Constructs the streaming URL for vidsrc.xyz
-  /// Prefers IMDB ID if available, falls back to TMDB ID from seasonDetails
-  /// Uses query parameters for better reliability
   String _buildStreamingUrl(int episodeNumber, EpisodeDetails? seasonDetails) {
-    // Ensure season number is at least 1 (never 0)
     final validSeasonNumber = seasonNumber < 1 ? 1 : seasonNumber;
 
-    // First priority: Use passed IMDB ID
     if (imdbId != null && imdbId!.isNotEmpty) {
       final formattedImdbId = imdbId!.startsWith('tt') ? imdbId! : 'tt$imdbId';
       return 'https://vidsrc.xyz/embed/tv?imdb=$formattedImdbId&season=$validSeasonNumber&episode=$episodeNumber&autoplay=1';
@@ -255,7 +247,6 @@ class SeasonDetailsScreen extends ConsumerWidget {
                                 ),
                               ),
                             ],
-                            // Debug info (remove in production)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -327,7 +318,6 @@ class SeasonDetailsScreen extends ConsumerWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                        // Navigate to Episode Details Screen
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -471,7 +461,6 @@ class SeasonDetailsScreen extends ConsumerWidget {
                                           size: 24,
                                         ),
                                         onPressed: () {
-                                          // Navigate to Episode Details Screen
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -507,11 +496,10 @@ class SeasonDetailsScreen extends ConsumerWidget {
                                       style: const TextStyle(
                                         color: Colors.white70,
                                       ),
-                                      maxLines: 2, // Reduced to show less text
+                                      maxLines: 2, 
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
-                                  // Optional: Add a "Tap for more details" hint
                                   const SizedBox(height: 4),
                                   Text(
                                     'Tap for details',

@@ -2,10 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/episode_card.dart';
+import 'package:netflix/components/series/episode_card.dart';
 import 'package:netflix/components/header_section.dart';
-import 'package:netflix/components/info_card.dart';
-import 'package:netflix/components/season_card.dart';
+import 'package:netflix/components/series/info_card.dart';
+import 'package:netflix/components/series/recommendedseries.dart';
+import 'package:netflix/components/series/season_card.dart';
+import 'package:netflix/components/series/similar_series.dart';
 import 'package:netflix/models/series_details.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -93,6 +95,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                       if (series.createdBy.isNotEmpty)
                         _buildCreatedBySection(series.createdBy),
                       _buildAdditionalInfoSection(series),
+                      const SizedBox(height: 24),
+                      SimilarSeriesSection(seriesId: widget.id),
+                      RecommendedSeriesSection(seriesId: widget.id),
                     ],
                   ),
                 ),
@@ -103,38 +108,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       ),
     );
   }
-
-  // Widget _buildActionButtons() {
-  //   return Row(
-  //     children: [
-  //       Expanded(
-  //         child: ElevatedButton.icon(
-  //           onPressed: () {},
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.white,
-  //             foregroundColor: Colors.black,
-  //             padding: const EdgeInsets.symmetric(vertical: 12),
-  //           ),
-  //           icon: const Icon(Icons.play_arrow),
-  //           label: const Text('Play'),
-  //         ),
-  //       ),
-  //       const SizedBox(width: 12),
-  //       Expanded(
-  //         child: ElevatedButton.icon(
-  //           onPressed: () {},
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.grey[900],
-  //             foregroundColor: Colors.white,
-  //             padding: const EdgeInsets.symmetric(vertical: 12),
-  //           ),
-  //           icon: const Icon(Icons.add),
-  //           label: const Text('My List'),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Widget _buildTagline(String tagline) {
     return Padding(

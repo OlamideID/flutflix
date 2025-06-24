@@ -7,8 +7,12 @@ import 'package:netflix/models/episode_details.dart';
 import 'package:netflix/models/movie_details_model.dart';
 import 'package:netflix/models/movie_model.dart';
 import 'package:netflix/models/popular_series.dart';
+import 'package:netflix/models/recommend_movies.dart';
+import 'package:netflix/models/recommended_series.dart';
 import 'package:netflix/models/season_details.dart';
 import 'package:netflix/models/series_details.dart';
+import 'package:netflix/models/similarmovies.dart';
+import 'package:netflix/models/similarseries.dart';
 import 'package:netflix/models/top_rated.dart';
 import 'package:netflix/models/trending.dart';
 import 'package:netflix/models/up_coming_model.dart';
@@ -41,17 +45,9 @@ class ApiService {
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
-        // Add this debug line to see the actual JSON structure
-        // print("Raw JSON: ${response.body}");
-
-        // Try parsing with more error handling
         try {
           return upcomingMovieFromJson(response.body);
         } catch (parseError) {
-          // print("JSON parsing error: $parseError");
-          // // You could try using a generic approach
-          // final Map<String, dynamic> json = jsonDecode(response.body);
-          // // print("JSON keys: ${json.keys}");
           return null;
         }
       } else {
@@ -182,105 +178,191 @@ class ApiService {
     }
   }
 
-  // Alternative method in case the season number mapping is different
-  Future<Seasondetails?> getSeasonDetailsAlternative(
+  Future<Similar?> getSimilarMovies(int movieId) async {
+    try {
+      final endPoint = "movie/$movieId/similar";
+      final apiUrl = "$baseUrl$endPoint?api_key=$apikey&language=en-US&page=1";
+      print("Fetching similar movies from: $apiUrl");
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        try {
+          final data = similarFromJson(response.body);
+          print("Found ${data.results.length} similar movies");
+          return data;
+        } catch (e) {
+          print('Error parsing similar movies: $e');
+          return null;
+        }
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Network error: $e');
+      return null;
+    }
+  }
+
+  Future<SimilarSeries?> getSimilarSeries(int tvSeriesId) async {
+    try {
+      final endPoint = "tv/$tvSeriesId/similar";
+      final apiUrl = "$baseUrl$endPoint?api_key=$apikey&language=en-US&page=1";
+      print("Fetching similar series from: $apiUrl");
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        try {
+          final data = similarSeriesFromJson(response.body);
+          print("Found ${data.results.length} similar series");
+          return data;
+        } catch (e) {
+          print('Error parsing similar series: $e');
+          return null;
+        }
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Network error: $e');
+      return null;
+    }
+  }
+
+  Future<RecommendedSeries?> getRecommendedSeries(int seriesId) async {
+    try {
+      final endPoint = "tv/$seriesId/recommendations";
+      final apiUrl = "$baseUrl$endPoint?api_key=$apikey";
+      print("Fetching recommended series from: $apiUrl");
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        try {
+          final data = recommendedFromJson(response.body);
+          print("Found ${data.results.length} recommended series");
+          return data;
+        } catch (e) {
+          print('Error parsing recommended series: $e');
+          return null;
+        }
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Network error: $e');
+      return null;
+    }
+  }
+
+  Future<RecommendedMovies?> getRecommendedMovies(int seriesId) async {
+    try {
+      final endPoint = "movie/$seriesId/recommendations";
+      final apiUrl = "$baseUrl$endPoint?api_key=$apikey";
+      print("Fetching recommended series from: $apiUrl");
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        try {
+          final data = recommendedMoviesFromJson(response.body);
+          print("Found ${data.results.length} recommended movies");
+          return data;
+        } catch (e) {
+          print('Error parsing recommended series: $e');
+          return null;
+        }
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Network error: $e');
+      return null;
+    }
+  }
+
+  Future<EpisodeDetails?> getEpisodeDetails(
     int seriesId,
-    int seasonId,
+    int seasonNumber,
   ) async {
     try {
-      // Sometimes the season ID from the series details is different from season number
-      final url = '$baseUrl/tv/$seriesId/season/$seasonId?api_key=$apikey';
-      debugPrint('Alternative fetch from: $url');
+      final validSeasonNumber = seasonNumber < 1 ? 1 : seasonNumber;
+
+      final url =
+          '${baseUrl}tv/$seriesId/season/$validSeasonNumber?api_key=$apikey';
+      debugPrint('Fetching episode details from: $url');
+
+      final response = await http.get(Uri.parse(url));
+
+      debugPrint('Response status: ${response.statusCode}');
+      // debugPrint('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          final episodeDetails = episodeDetailsFromJson(response.body);
+          debugPrint('Successfully parsed episode details');
+          return episodeDetails;
+        } catch (parseError) {
+          debugPrint('Error parsing JSON response: $parseError');
+          debugPrint('Raw response: ${response.body}');
+          return null;
+        }
+      } else if (response.statusCode == 404) {
+        debugPrint('Season $validSeasonNumber not found for series $seriesId');
+
+        if (validSeasonNumber != 1) {
+          debugPrint('Trying fallback to season 1');
+          return await getEpisodeDetails(seriesId, 1);
+        }
+
+        return null;
+      } else {
+        debugPrint(
+          'Failed to fetch episode details: ${response.statusCode} - ${response.reasonPhrase}',
+        );
+        debugPrint('Response body: ${response.body}');
+
+        // Parse error response to get more details
+        try {
+          final errorResponse = json.decode(response.body);
+          final errorMessage =
+              errorResponse['status_message'] ?? 'Unknown error';
+          throw Exception('Failed to load episode details: $errorMessage');
+        } catch (e) {
+          throw Exception(
+            'Failed to load episode details: ${response.statusCode} - ${response.reasonPhrase}',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching episode details: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getExternalIds(int seriesId) async {
+    try {
+      final url = '${baseUrl}tv/$seriesId/external_ids?api_key=$apikey';
+      debugPrint('Fetching external IDs from: $url');
 
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        return seasondetailsFromJson(response.body);
+        final data = json.decode(response.body);
+        debugPrint('External IDs: $data');
+        return data;
       } else {
-        debugPrint('Alternative method also failed: ${response.statusCode}');
+        debugPrint('Failed to fetch external IDs: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      debugPrint('Alternative method error: $e');
+      debugPrint('Error fetching external IDs: $e');
       return null;
     }
   }
-
-Future<EpisodeDetails?> getEpisodeDetails(
-  int seriesId,
-  int seasonNumber,
-) async {
-  try {
-    // Ensure season number is valid (minimum 1)
-    final validSeasonNumber = seasonNumber < 1 ? 1 : seasonNumber;
-    
-    final url = '${baseUrl}tv/$seriesId/season/$validSeasonNumber?api_key=$apikey';
-    debugPrint('Fetching episode details from: $url');
-
-    final response = await http.get(Uri.parse(url));
-    
-    debugPrint('Response status: ${response.statusCode}');
-    debugPrint('Response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      try {
-        final episodeDetails = episodeDetailsFromJson(response.body);
-        debugPrint('Successfully parsed episode details');
-        return episodeDetails;
-      } catch (parseError) {
-        debugPrint('Error parsing JSON response: $parseError');
-        debugPrint('Raw response: ${response.body}');
-        return null;
-      }
-    } else if (response.statusCode == 404) {
-      debugPrint('Season $validSeasonNumber not found for series $seriesId');
-      
-      // Try season 1 as fallback only if we weren't already trying season 1
-      if (validSeasonNumber != 1) {
-        debugPrint('Trying fallback to season 1');
-        return await getEpisodeDetails(seriesId, 1);
-      }
-      
-      return null;
-    } else {
-      debugPrint('Failed to fetch episode details: ${response.statusCode} - ${response.reasonPhrase}');
-      debugPrint('Response body: ${response.body}');
-      
-      // Parse error response to get more details
-      try {
-        final errorResponse = json.decode(response.body);
-        final errorMessage = errorResponse['status_message'] ?? 'Unknown error';
-        throw Exception('Failed to load episode details: $errorMessage');
-      } catch (e) {
-        throw Exception('Failed to load episode details: ${response.statusCode} - ${response.reasonPhrase}');
-      }
-    }
-  } catch (e) {
-    debugPrint('Error fetching episode details: $e');
-    return null;
-  }
-}
-
-Future<Map<String, dynamic>?> getExternalIds(int seriesId) async {
-  try {
-    final url = '${baseUrl}tv/$seriesId/external_ids?api_key=$apikey';
-    debugPrint('Fetching external IDs from: $url');
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      debugPrint('External IDs: $data');
-      return data;
-    } else {
-      debugPrint('Failed to fetch external IDs: ${response.statusCode}');
-      return null;
-    }
-  } catch (e) {
-    debugPrint('Error fetching external IDs: $e');
-    return null;
-  }
-}
-
-
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/cards/series_card.dart';
+import 'package:netflix/components/series/series_card.dart';
 import 'package:netflix/screens/home.dart';
 
 class SeriesSection extends ConsumerWidget {

@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
+import 'package:netflix/components/movies/recommended_section.dart';
+import 'package:netflix/components/movies/similar_movies_section.dart';
 import 'package:netflix/models/movie_details_model.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -102,8 +104,12 @@ class MovieDetailsScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: _MovieDetailsBody(movie: movie),
+                  child: MovieDetailsBody(movie: movie),
                 ),
+              ),
+              SliverToBoxAdapter(child: SimilarMoviesSection(movieId: movieId)),
+              SliverToBoxAdapter(
+                child: RecommendedMoviesSection(movieId: movieId),
               ),
             ],
           );
@@ -113,8 +119,8 @@ class MovieDetailsScreen extends ConsumerWidget {
   }
 }
 
-class _MovieDetailsBody extends StatelessWidget {
-  const _MovieDetailsBody({required this.movie});
+class MovieDetailsBody extends StatelessWidget {
+  const MovieDetailsBody({super.key, required this.movie});
   final Moviedetail movie;
 
   @override
@@ -364,7 +370,7 @@ class _MovieDetailsBody extends StatelessWidget {
       return '${(number / 1000000000).toStringAsFixed(1)}B';
     }
     if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
-    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
+    if (number >= 1000) return '${(number / 1000000).toStringAsFixed(1)}K';
     return number.toString();
   }
 }

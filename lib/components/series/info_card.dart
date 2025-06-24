@@ -22,11 +22,17 @@ class InfoCard extends StatelessWidget {
           _buildInfoRow('Status', series.status),
           _buildInfoRow('Type', series.type),
           _buildInfoRow('In Production', series.inProduction ? 'Yes' : 'No'),
-          _buildInfoRow('First Air Date', dateFormat.format(series.firstAirDate)),
+          _buildInfoRow(
+            'First Air Date',
+            dateFormat.format(series.firstAirDate),
+          ),
           _buildInfoRow('Last Air Date', dateFormat.format(series.lastAirDate)),
           _buildInfoRow('Seasons', series.numberOfSeasons.toString()),
           _buildInfoRow('Episodes', series.numberOfEpisodes.toString()),
-          _buildInfoRow('Original Language', series.originalLanguage.toUpperCase()),
+          _buildInfoRow(
+            'Original Language',
+            series.originalLanguage.toUpperCase(),
+          ),
         ],
       ),
     );

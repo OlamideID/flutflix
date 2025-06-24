@@ -1,7 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/featured_movie_card.dart';
+import 'package:netflix/components/movies/featured_movie_card.dart';
 import 'package:netflix/providers/providers.dart';
 
 class FeaturedMovieCarousel extends ConsumerWidget {

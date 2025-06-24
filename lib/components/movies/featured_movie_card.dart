@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:netflix/common/utils.dart';
-import 'package:netflix/components/featured_movie_actions.dart';
+import 'package:netflix/components/movies/featured_movie_actions.dart';
 import 'package:netflix/screens/movie_details.dart';
 
 class FeaturedMovieCard extends StatelessWidget {
