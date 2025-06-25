@@ -90,7 +90,6 @@ final seasonCreditsProvider = FutureProvider.family<Seasoncast?, ({int seriesId,
 });
 
 
-// Updated enum to include person search
 enum SearchType { movie, tv, person }
 
 final searchTypeProvider = StateProvider<SearchType>((ref) => SearchType.movie);
