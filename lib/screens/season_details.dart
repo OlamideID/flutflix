@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
+import 'package:netflix/components/series/season_cast.dart';
 import 'package:netflix/models/episode_details.dart';
 import 'package:netflix/screens/episode_details.dart';
 import 'package:netflix/services/api_service.dart';
@@ -22,14 +23,12 @@ final seasonDetailsProvider = FutureProvider.family<
     params.seasonNumber,
   );
 
-  if (result == null && params.seasonNumber > 1) {
+  // Only fall back to season 1 if the requested season doesn't exist AND it's not season 1
+  if (result == null && params.seasonNumber != 1) {
     debugPrint(
       'Season ${params.seasonNumber} not found, trying season 1 as fallback',
     );
-    result = await api.getEpisodeDetails(
-      params.seriesId,
-      1, // Always fallback to season 1, not seasonNumber - 1
-    );
+    result = await api.getEpisodeDetails(params.seriesId, 1);
   }
 
   if (result == null) {
@@ -153,10 +152,65 @@ class SeasonDetailsScreen extends ConsumerWidget {
             ),
         data: (seasonDetails) {
           if (seasonDetails == null) {
-            return const Center(
-              child: Text(
-                'No season data available',
-                style: TextStyle(color: Colors.white),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.tv_off, color: Colors.grey, size: 64),
+                  const SizedBox(height: 16),
+                  Text(
+                    seasonNumber == 0
+                        ? 'Season 0 (Specials) not available'
+                        : 'Season $seasonNumber not available',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'This season might not exist for this series.',
+                    style: const TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  // Only show "Go to Season 1" if we're not already trying to view Season 1
+                  if (seasonNumber != 1) ...[
+                    ElevatedButton(
+                      onPressed: () {
+                        // Navigate to season 1 if it exists
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => SeasonDetailsScreen(
+                                  seriesId: seriesId,
+                                  seasonNumber: 1,
+                                  seasonId: null,
+                                  seasonName: 'Season 1',
+                                  seriesName: seriesName,
+                                  imdbId: imdbId,
+                                ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Go to Season 1'),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Go Back',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             );
           }
@@ -289,6 +343,13 @@ class SeasonDetailsScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              SliverToBoxAdapter(
+                child: SeasonCastSection(
+                  seriesId: seriesId,
+                  seasonNumber: seasonNumber,
+                ),
+              ),
+
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -496,7 +557,7 @@ class SeasonDetailsScreen extends ConsumerWidget {
                                       style: const TextStyle(
                                         color: Colors.white70,
                                       ),
-                                      maxLines: 2, 
+                                      maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ],

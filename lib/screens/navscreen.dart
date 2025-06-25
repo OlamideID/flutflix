@@ -7,6 +7,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:netflix/constants/colors.dart';
 import 'package:netflix/screens/home.dart';
+import 'package:netflix/screens/search.dart';
 
 class NavBarScreen extends StatefulWidget {
   const NavBarScreen({super.key});
@@ -20,8 +21,8 @@ class _NavBarScreenState extends State<NavBarScreen> {
 
   final List<Widget> _screens = [
     const NetflixHome(),
-    const Scaffold(),
-    const Scaffold(backgroundColor: Colors.amber),
+    const SearchScreen(),
+    const Scaffold(body: Center(child: Text('Something is coming'))),
   ];
 
   void _onTabChange(int index) {

@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/series/episode_card.dart';
 import 'package:netflix/components/header_section.dart';
+import 'package:netflix/components/series/episode_card.dart';
 import 'package:netflix/components/series/info_card.dart';
 import 'package:netflix/components/series/recommendedseries.dart';
 import 'package:netflix/components/series/season_card.dart';
 import 'package:netflix/components/series/similar_series.dart';
+import 'package:netflix/components/series/series_cast.dart';
 import 'package:netflix/models/series_details.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -96,6 +97,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         _buildCreatedBySection(series.createdBy),
                       _buildAdditionalInfoSection(series),
                       const SizedBox(height: 24),
+                      SeriesCastSection(tvId: widget.id),
                       SimilarSeriesSection(seriesId: widget.id),
                       RecommendedSeriesSection(seriesId: widget.id),
                     ],

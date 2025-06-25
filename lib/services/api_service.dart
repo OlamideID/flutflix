@@ -3,18 +3,25 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:netflix/common/utils.dart';
+import 'package:netflix/models/actor_credits.dart';
+import 'package:netflix/models/actor_profile.dart';
 import 'package:netflix/models/episode_details.dart';
+import 'package:netflix/models/movie_credits.dart';
 import 'package:netflix/models/movie_details_model.dart';
 import 'package:netflix/models/movie_model.dart';
+import 'package:netflix/models/person_search.dart';
 import 'package:netflix/models/popular_series.dart';
 import 'package:netflix/models/recommend_movies.dart';
 import 'package:netflix/models/recommended_series.dart';
-import 'package:netflix/models/season_details.dart';
+import 'package:netflix/models/search_movie.dart';
+import 'package:netflix/models/search_tv.dart';
 import 'package:netflix/models/series_details.dart';
 import 'package:netflix/models/similarmovies.dart';
 import 'package:netflix/models/similarseries.dart';
 import 'package:netflix/models/top_rated.dart';
 import 'package:netflix/models/trending.dart';
+import 'package:netflix/models/tv_credits.dart';
+import 'package:netflix/models/tv_season_cast.dart';
 import 'package:netflix/models/up_coming_model.dart';
 
 var key = "?api_key=$apikey";
@@ -55,6 +62,52 @@ class ApiService {
       }
     } catch (e) {
       print('Error in upComingMovies: $e');
+      return null;
+    }
+  }
+
+  Future<SearchMovie?> searchMovies(String query) async {
+    try {
+      final encodedQuery = Uri.encodeQueryComponent(query);
+      final apiUrl = "${baseUrl}search/movie$key&query=$encodedQuery";
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        try {
+          return searchMovieFromJson(response.body);
+        } catch (parseError) {
+          print('Parsing error in searchMovies: $parseError');
+          return null;
+        }
+      } else {
+        throw Exception('API Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in searchMovies: $e');
+      return null;
+    }
+  }
+
+  Future<SearchTV?> searchTVSeries(String query) async {
+    try {
+      final encodedQuery = Uri.encodeQueryComponent(query);
+      final apiUrl = "${baseUrl}search/tv$key&query=$encodedQuery";
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        try {
+          return searchTVFromJson(response.body);
+        } catch (parseError) {
+          print('Parsing error in searchTVSeries: $parseError');
+          return null;
+        }
+      } else {
+        throw Exception('API Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in searchTVSeries: $e');
       return null;
     }
   }
@@ -149,31 +202,107 @@ class ApiService {
     }
   }
 
-  // Fixed API Service method for getting season details
-  Future<Seasondetails?> getSeasonDetails(
-    int seriesId,
-    int seasonNumber,
-  ) async {
-    try {
-      final url = '$baseUrl/tv/$seriesId/season/$seasonNumber?api_key=$apikey';
-      debugPrint('Fetching season details from: $url');
-      debugPrint('Series ID: $seriesId, Season Number: $seasonNumber');
+  Future<Actorprofile?> getPersonDetails(int personId) async {
+    final url = '${baseUrl}person/$personId?api_key=$apikey';
 
+    try {
       final response = await http.get(Uri.parse(url));
 
-      debugPrint('Response status code: ${response.statusCode}');
-
       if (response.statusCode == 200) {
-        debugPrint('Successfully fetched season details');
-        return seasondetailsFromJson(response.body);
+        return actorprofileFromJson(response.body);
       } else {
-        debugPrint('Failed response body: ${response.body}');
-        throw Exception(
-          'Failed to load season details: ${response.statusCode} - ${response.reasonPhrase}',
-        );
+        print("Failed to load person details: ${response.body}");
+        return null;
       }
     } catch (e) {
-      debugPrint('Error fetching season details: $e');
+      print("Wahala in person details: $e");
+      return null;
+    }
+  }
+
+  Future<ActorCredits> getPersonCredits(int personId) async {
+    final response = await http.get(
+      Uri.parse(
+        'https://api.themoviedb.org/3/person/$personId/combined_credits?api_key=$apikey',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return actorcreditsfromjson(response.body);
+    } else {
+      throw Exception('Failed to load person credits');
+    }
+  }
+
+  Future<Moviescredits?> getMovieCredits(int movieId) async {
+    final String url = "${baseUrl}movie/$movieId/credits?api_key=$apikey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        return moviesCreditsFromJson(response.body);
+      } else {
+        print('Failed to load credits: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching movie credits: $e');
+      return null;
+    }
+  }
+
+  Future<Seasoncast?> getSeasonCredits(int seriesId, int seasonNumber) async {
+    final String url =
+        "${baseUrl}tv/$seriesId/season/$seasonNumber/credits?api_key=$apikey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        return seasoncastFromJson(response.body);
+      } else {
+        print('Failed to load season credits: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching season credits: $e');
+      return null;
+    }
+  }
+
+  Future<Seriescredits?> getTvSeriesCredits(int tvId) async {
+    final String url = "${baseUrl}tv/$tvId/credits?api_key=$apikey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        return seriescreditsFromJson(response.body);
+      } else {
+        print('Failed to load series credits: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching series credits: $e');
+      return null;
+    }
+  }
+
+  Future<Perasonsearch?> searchPerson(String query) async {
+    final url =
+        '${baseUrl}search/person?api_key=$apikey&query=${Uri.encodeComponent(query)}';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        return perasonsearchFromJson(response.body);
+      } else {
+        print('Failed to search person: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error searching person: $e');
       return null;
     }
   }
@@ -291,10 +420,8 @@ class ApiService {
     int seasonNumber,
   ) async {
     try {
-      final validSeasonNumber = seasonNumber < 1 ? 1 : seasonNumber;
-
-      final url =
-          '${baseUrl}tv/$seriesId/season/$validSeasonNumber?api_key=$apikey';
+      // Don't modify the season number - use it as requested
+      final url = '${baseUrl}tv/$seriesId/season/$seasonNumber?api_key=$apikey';
       debugPrint('Fetching episode details from: $url');
 
       final response = await http.get(Uri.parse(url));
@@ -313,13 +440,8 @@ class ApiService {
           return null;
         }
       } else if (response.statusCode == 404) {
-        debugPrint('Season $validSeasonNumber not found for series $seriesId');
-
-        if (validSeasonNumber != 1) {
-          debugPrint('Trying fallback to season 1');
-          return await getEpisodeDetails(seriesId, 1);
-        }
-
+        debugPrint('Season $seasonNumber not found for series $seriesId');
+        // Return null - let the provider handle the fallback logic
         return null;
       } else {
         debugPrint(

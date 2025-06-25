@@ -12,7 +12,7 @@ class SeasonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         debugPrint('Tapping season card:');
         debugPrint('Series ID: ${series.id}');

@@ -1,9 +1,8 @@
-// import 'dart:js' as js;
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
+import 'package:netflix/components/movies/movie_cast.dart';
 import 'package:netflix/components/movies/recommended_section.dart';
 import 'package:netflix/components/movies/similar_movies_section.dart';
 import 'package:netflix/models/movie_details_model.dart';
@@ -48,6 +47,8 @@ class MovieDetailsScreen extends ConsumerWidget {
             );
           }
 
+          final imagePath = movie.backdropPath ?? movie.posterPath;
+
           return CustomScrollView(
             slivers: [
               SliverAppBar(
@@ -65,7 +66,7 @@ class MovieDetailsScreen extends ConsumerWidget {
                     children: [
                       CachedNetworkImage(
                         imageUrl:
-                            "$imageUrl${movie.backdropPath.isNotEmpty ? movie.backdropPath : movie.posterPath}",
+                            imagePath != null ? "$imageUrl$imagePath" : '',
                         fit: BoxFit.cover,
                         placeholder:
                             (context, url) => Container(
@@ -107,6 +108,9 @@ class MovieDetailsScreen extends ConsumerWidget {
                   child: MovieDetailsBody(movie: movie),
                 ),
               ),
+
+              SliverToBoxAdapter(child: CastSection(movieId: movieId)),
+
               SliverToBoxAdapter(child: SimilarMoviesSection(movieId: movieId)),
               SliverToBoxAdapter(
                 child: RecommendedMoviesSection(movieId: movieId),
@@ -140,12 +144,12 @@ class MovieDetailsBody extends StatelessWidget {
         Row(
           children: [
             Text(
-              '${movie.releaseDate.year}',
+              '${movie.releaseDate?.year ?? 'Unknown'}',
               style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(width: 16),
             Text(
-              '${movie.runtime} min',
+              '${movie.runtime ?? 'N/A'} min',
               style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(width: 16),
@@ -201,7 +205,7 @@ class MovieDetailsBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
-        if (movie.tagline.isNotEmpty) ...[
+        if ((movie.tagline?.isNotEmpty ?? false)) ...[
           Text(
             '"${movie.tagline}"',
             style: const TextStyle(
@@ -244,27 +248,22 @@ class MovieDetailsBody extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children:
-                movie.genres
-                    .map(
-                      (genre) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          genre.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
+                movie.genres.map((genre) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      genre.name,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 24),
         ],
@@ -370,12 +369,11 @@ class MovieDetailsBody extends StatelessWidget {
       return '${(number / 1000000000).toStringAsFixed(1)}B';
     }
     if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
-    if (number >= 1000) return '${(number / 1000000).toStringAsFixed(1)}K';
+    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
     return number.toString();
   }
 }
 
-// This generates the video URL using movieId
 String getVideoUrl(String movieId) => 'https://vidsrc.icu/embed/movie/$movieId';
 
 Future<void> openUrl(String url) async {
