@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/components/series/series_card.dart';
-import 'package:netflix/screens/home.dart';
+import 'package:netflix/helpers/helpers.dart';
 
 class SeriesSection extends ConsumerWidget {
   final String sectionTitle;
@@ -24,7 +24,10 @@ class SeriesSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(title: sectionTitle),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
+            child: SectionTitle(title: sectionTitle),
+          ),
           const SizedBox(height: 10),
           SizedBox(
             height: 180,
@@ -45,7 +48,6 @@ class SeriesSection extends ConsumerWidget {
     );
   }
 }
-
 
 // widgets/common/section_title.dart
 class SectionTitle extends StatelessWidget {

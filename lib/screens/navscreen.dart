@@ -19,11 +19,21 @@ class NavBarScreen extends StatefulWidget {
 class _NavBarScreenState extends State<NavBarScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    const NetflixHome(),
-    const SearchScreen(),
-    const Scaffold(body: Center(child: Text('Something is coming'))),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      NetflixHome(
+        search: () {
+          _onTabChange(1); // ✅ Switch to Search screen
+        },
+      ),
+      const SearchScreen(),
+      const Scaffold(body: Center(child: Text('Something is coming'))),
+    ];
+  }
 
   void _onTabChange(int index) {
     setState(() {
@@ -86,7 +96,7 @@ class _NavBarScreenState extends State<NavBarScreen> {
       animationDuration: const Duration(milliseconds: 300),
       animationCurve: Curves.easeInOut,
       onTap: _onTabChange,
-      items: [
+      items: const [
         Icon(Iconsax.home, size: 26, color: Colors.white),
         Icon(Iconsax.search_normal, size: 26, color: Colors.white),
         Icon(Icons.photo_library, size: 26, color: Colors.white),

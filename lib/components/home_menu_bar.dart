@@ -1,11 +1,11 @@
-
-
 // widgets/netflix_menu_bar.dart
 import 'package:flutter/material.dart';
 import 'package:netflix/components/home_menu_button.dart';
 
 class NetflixMenuBar extends StatelessWidget {
-  const NetflixMenuBar({super.key});
+  const NetflixMenuBar({super.key, required this.tv, required this.movies});
+  final Function tv;
+  final Function movies;
 
   @override
   Widget build(BuildContext context) {
@@ -13,9 +13,19 @@ class NetflixMenuBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Row(
         children: [
-          NetflixMenuButton(title: 'TV Shows', onPressed: () {}),
+          NetflixMenuButton(
+            title: 'TV Shows',
+            onPressed: () {
+              tv();
+            },
+          ),
           const SizedBox(width: 8),
-          NetflixMenuButton(title: 'Movies', onPressed: () {}),
+          NetflixMenuButton(
+            title: 'Movies',
+            onPressed: () {
+              movies();
+            },
+          ),
           const SizedBox(width: 8),
           MaterialButton(
             onPressed: () {

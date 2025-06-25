@@ -17,7 +17,7 @@ class SeasonCard extends StatelessWidget {
         debugPrint('Tapping season card:');
         debugPrint('Series ID: ${series.id}');
         debugPrint('Season Number: ${season.seasonNumber}');
-        debugPrint('Season ID: ${season.id}'); // This might be different!
+        debugPrint('Season ID: ${season.id}');
         debugPrint('Season Name: ${season.name}');
         
         Navigator.push(

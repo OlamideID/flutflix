@@ -33,6 +33,38 @@ class ImageErrorWidget extends StatelessWidget {
   }
 }
 
+class LoadingIndicator extends StatelessWidget {
+  const LoadingIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: CircularProgressIndicator());
+  }
+}
+
+class ErrorDisplay extends StatelessWidget {
+  final String error;
+
+  const ErrorDisplay({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text('Error: $error'));
+  }
+}
+
+class NoDataDisplay extends StatelessWidget {
+  final String message;
+
+  const NoDataDisplay({super.key, this.message = 'No data available'});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text(message));
+  }
+}
+
+
 // utils/video_url_helper.dart
 class VideoUrlHelper {
   static String getVideoUrl(String movieId) {

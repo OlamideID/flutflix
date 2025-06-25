@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:netflix/common/utils.dart';
-import 'package:netflix/components/movies/featured_movie_actions.dart';
 import 'package:netflix/screens/movie_details.dart';
 
 class FeaturedMovieCard extends StatelessWidget {
@@ -47,12 +46,21 @@ class FeaturedMovieCard extends StatelessWidget {
             ),
           ),
         ),
-        // Action buttons
+
         Positioned(
-          left: 30,
-          right: 30,
-          bottom: 10,
-          child: FeaturedMovieActions(movie: movie),
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 60,
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.transparent, Colors.black87],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
         ),
       ],
     );

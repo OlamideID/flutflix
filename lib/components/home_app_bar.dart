@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class NetflixAppBar extends StatelessWidget {
-  const NetflixAppBar({super.key});
+  const NetflixAppBar({super.key, required this.search});
+  final Function search;
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +14,7 @@ class NetflixAppBar extends StatelessWidget {
           const Spacer(),
           IconButton(
             onPressed: () {
-              // Handle search
+              search();
             },
             icon: const Icon(Icons.search, size: 27),
             color: Colors.white,
