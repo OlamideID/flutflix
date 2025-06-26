@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/common/utils.dart';
 import 'package:netflix/helpers/helpers.dart';
 import 'package:netflix/screens/movie_details.dart';
 
@@ -44,7 +43,7 @@ class MovieSection extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 220, // Increased height for better visuals
+            height: 220,
             child: asyncMovies.when(
               loading: () => const _MovieLoadingCarousel(),
               error: (e, _) {
@@ -61,6 +60,9 @@ class MovieSection extends ConsumerWidget {
                   if (data?.results?.isNotEmpty == true) {
                     print(
                       'MovieSection - First movie poster: ${data!.results![0].posterPath}',
+                    );
+                    print(
+                      'MovieSection - Full URL: https://image.tmdb.org/t/p/w500${data.results![0].posterPath}',
                     );
                   }
                 }
@@ -194,20 +196,39 @@ class _MovieCarouselCard extends StatelessWidget {
   }
 
   Widget _buildMovieImage(String posterPath) {
-    final fullImageUrl = "$imageUrl$posterPath";
+    // Multiple image size options for fallback
+    final imageUrls = [
+      'https://image.tmdb.org/t/p/w500$posterPath',
+      'https://image.tmdb.org/t/p/w300$posterPath',
+      'https://image.tmdb.org/t/p/w780$posterPath',
+    ];
 
     if (kDebugMode) {
-      print('_MovieCarouselCard - Full image URL: $fullImageUrl');
+      print('_MovieCarouselCard - Trying image URLs: $imageUrls');
+    }
+
+    return _buildImageWithFallback(imageUrls, 0);
+  }
+
+  Widget _buildImageWithFallback(List<String> urls, int index) {
+    if (index >= urls.length) {
+      return _buildErrorPlaceholder();
+    }
+
+    final currentUrl = urls[index];
+
+    if (kDebugMode) {
+      print('_MovieCarouselCard - Attempting URL $index: $currentUrl');
     }
 
     if (kIsWeb) {
       return Image.network(
-        fullImageUrl,
+        currentUrl,
         fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) {
             if (kDebugMode) {
-              print('_MovieCarouselCard - Image loaded: $fullImageUrl');
+              print('_MovieCarouselCard - ✅ Image loaded: $currentUrl');
             }
             return child;
           }
@@ -220,10 +241,11 @@ class _MovieCarouselCard extends StatelessWidget {
         },
         errorBuilder: (context, error, stackTrace) {
           if (kDebugMode) {
-            print('_MovieCarouselCard - Image error: $error');
-            print('_MovieCarouselCard - Failed URL: $fullImageUrl');
+            print('_MovieCarouselCard - ❌ Image failed: $currentUrl');
+            print('_MovieCarouselCard - Error: $error');
           }
-          return _buildErrorPlaceholder();
+          // Try next URL in fallback chain
+          return _buildImageWithFallback(urls, index + 1);
         },
         cacheWidth: 300,
         cacheHeight: 450,
@@ -231,7 +253,7 @@ class _MovieCarouselCard extends StatelessWidget {
     }
 
     return CachedNetworkImage(
-      imageUrl: fullImageUrl,
+      imageUrl: currentUrl,
       fit: BoxFit.cover,
       placeholder:
           (context, url) => Container(
@@ -242,9 +264,10 @@ class _MovieCarouselCard extends StatelessWidget {
           ),
       errorWidget: (context, url, error) {
         if (kDebugMode) {
-          print('CachedNetworkImage - Error: $error, URL: $url');
+          print('CachedNetworkImage - ❌ Error: $error, URL: $url');
         }
-        return _buildErrorPlaceholder();
+        // Try next URL in fallback chain
+        return _buildImageWithFallback(urls, index + 1);
       },
       fadeInDuration: const Duration(milliseconds: 200),
       memCacheWidth: 300,
