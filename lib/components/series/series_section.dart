@@ -22,7 +22,6 @@ class SeriesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncSeries = ref.watch(provider);
-    final screenWidth = MediaQuery.of(context).size.width;
 
     return Padding(
       padding: const EdgeInsets.only(top: 20),
@@ -39,14 +38,6 @@ class SeriesSection extends ConsumerWidget {
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {}, // Add "See All" functionality
-                  child: const Text(
-                    'See All',
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                 ),
               ],
