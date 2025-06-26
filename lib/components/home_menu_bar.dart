@@ -29,7 +29,6 @@ class NetflixMenuBar extends StatelessWidget {
           const SizedBox(width: 8),
           MaterialButton(
             onPressed: () {
-              // Handle categories
             },
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),

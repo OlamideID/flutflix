@@ -1,7 +1,8 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:netflix/common/utils.dart';
 import 'package:netflix/models/actor_credits.dart';
 import 'package:netflix/models/actor_profile.dart';
@@ -24,393 +25,284 @@ import 'package:netflix/models/tv_credits.dart';
 import 'package:netflix/models/tv_season_cast.dart';
 import 'package:netflix/models/up_coming_model.dart';
 
-var key = "?api_key=$apikey";
-
 class ApiService {
+  final Dio _dio;
+
+  ApiService()
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: 'https://api.themoviedb.org/3/',
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 3),
+        ),
+      ) {
+    _dio.interceptors.addAll([
+      DioCacheInterceptor(
+        options: CacheOptions(
+          store: MemCacheStore(),
+          policy: CachePolicy.forceCache,
+          maxStale: const Duration(hours: 1),
+          priority: CachePriority.normal,
+          keyBuilder: CacheOptions.defaultCacheKeyBuilder,
+          allowPostMethod: false,
+        ),
+      ),
+      LogInterceptor(request: true, responseBody: true, requestBody: true),
+    ]);
+  }
+
+  // Universal response parser helper
+  T _parseResponse<T>(dynamic responseData, T Function(String) parser) {
+    if (responseData is String) {
+      return parser(responseData);
+    } else {
+      return parser(json.encode(responseData));
+    }
+  }
+
   Future<Movie?> fetchMovies() async {
     try {
-      const endPoint = "movie/now_playing";
-      final apiUrl = "$baseUrl$endPoint$key";
-      final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        print("now playing url : $apiUrl");
-        return movieFromJson(response.body);
-      } else {
-        throw Exception('wahala');
-      }
-    } catch (e) {
-      // throw Exception('Error $e');
-      print('Wahala $e');
+      final response = await _dio.get(
+        'movie/now_playing',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, movieFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching movies: ${e.message}');
       return null;
     }
   }
 
   Future<UpcomingMovie?> upComingMovies() async {
     try {
-      const endPoint = "movie/upcoming";
-      final apiUrl = "$baseUrl$endPoint$key";
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        try {
-          return upcomingMovieFromJson(response.body);
-        } catch (parseError) {
-          return null;
-        }
-      } else {
-        throw Exception('API Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error in upComingMovies: $e');
+      final response = await _dio.get(
+        'movie/upcoming',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, upcomingMovieFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching upcoming movies: ${e.message}');
       return null;
     }
   }
 
   Future<SearchMovie?> searchMovies(String query) async {
     try {
-      final encodedQuery = Uri.encodeQueryComponent(query);
-      final apiUrl = "${baseUrl}search/movie$key&query=$encodedQuery";
-
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        try {
-          return searchMovieFromJson(response.body);
-        } catch (parseError) {
-          print('Parsing error in searchMovies: $parseError');
-          return null;
-        }
-      } else {
-        throw Exception('API Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error in searchMovies: $e');
+      final response = await _dio.get(
+        'search/movie',
+        queryParameters: {'api_key': apikey, 'query': query},
+      );
+      return _parseResponse(response.data, searchMovieFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error searching movies: ${e.message}');
       return null;
     }
   }
 
   Future<SearchTV?> searchTVSeries(String query) async {
     try {
-      final encodedQuery = Uri.encodeQueryComponent(query);
-      final apiUrl = "${baseUrl}search/tv$key&query=$encodedQuery";
-
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        try {
-          return searchTVFromJson(response.body);
-        } catch (parseError) {
-          print('Parsing error in searchTVSeries: $parseError');
-          return null;
-        }
-      } else {
-        throw Exception('API Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error in searchTVSeries: $e');
+      final response = await _dio.get(
+        'search/tv',
+        queryParameters: {'api_key': apikey, 'query': query},
+      );
+      return _parseResponse(response.data, searchTVFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error searching TV: ${e.message}');
       return null;
     }
   }
 
   Future<PopularTvSeries?> popularSeries() async {
     try {
-      const endPoint = "tv/popular";
-      final apiUrl = "$baseUrl$endPoint$key";
-      final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        print("popular tv series : $apiUrl");
-        return popularTvSeriesFromJson(response.body);
-      } else {
-        throw Exception('wahala');
-      }
-    } catch (e) {
-      // throw Exception('Error $e');
-      print('Wahala $e');
+      final response = await _dio.get(
+        'tv/popular',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, popularTvSeriesFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching popular series: ${e.message}');
       return null;
     }
   }
 
   Future<SeriesDetails?> seriesDetail(int id) async {
     try {
-      final endPoint = "tv/$id";
-      final apiUrl = "$baseUrl$endPoint$key";
-      final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        print("upcoming movie url : $apiUrl");
-        return seriesDetailsFromJson(response.body);
-      } else {
-        throw Exception('wahala');
-      }
-    } catch (e) {
-      // throw Exception('Error $e');
-      print('Wahala $e');
+      final response = await _dio.get(
+        'tv/$id',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, seriesDetailsFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching series details: ${e.message}');
       return null;
     }
   }
 
   Future<Trending?> trendingMovies() async {
     try {
-      final endPoint = "trending/movie/day";
-      final apiUrl = "$baseUrl$endPoint$key";
-      final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        print("trending movie url : $apiUrl");
-        return trendingFromJson(response.body);
-      } else {
-        throw Exception('wahala');
-      }
-    } catch (e) {
-      // throw Exception('Error $e');
-      print('Wahala $e');
+      final response = await _dio.get(
+        'trending/movie/day',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, trendingFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching trending movies: ${e.message}');
       return null;
     }
   }
 
   Future<Toprated?> topRatedMovies() async {
     try {
-      final endPoint = "movie/top_rated";
-      final apiUrl = "$baseUrl$endPoint$key";
-      final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        print("upcoming movie url : $apiUrl");
-        return topratedFromJson(response.body);
-      } else {
-        throw Exception('wahala');
-      }
-    } catch (e) {
-      // throw Exception('Error $e');
-      print('Wahala $e');
+      final response = await _dio.get(
+        'movie/top_rated',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, topratedFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching top rated movies: ${e.message}');
       return null;
     }
   }
 
   Future<Moviedetail?> movieDetails(int movieID) async {
     try {
-      final endPoint = "movie/$movieID";
-      final apiUrl = "$baseUrl$endPoint$key";
-      final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        print("upcoming movie url : $apiUrl");
-        return moviedetailsFromJson(response.body);
-      } else {
-        throw Exception('wahala');
-      }
-    } catch (e) {
-      // throw Exception('Error $e');
-      print('Wahala $e');
+      final response = await _dio.get(
+        'movie/$movieID',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, moviedetailsFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching movie details: ${e.message}');
       return null;
     }
   }
 
   Future<Actorprofile?> getPersonDetails(int personId) async {
-    final url = '${baseUrl}person/$personId?api_key=$apikey';
-
     try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        return actorprofileFromJson(response.body);
-      } else {
-        print("Failed to load person details: ${response.body}");
-        return null;
-      }
-    } catch (e) {
-      print("Wahala in person details: $e");
+      final response = await _dio.get(
+        'person/$personId',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, actorprofileFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching person details: ${e.message}');
       return null;
     }
   }
 
   Future<ActorCredits> getPersonCredits(int personId) async {
-    final response = await http.get(
-      Uri.parse(
-        'https://api.themoviedb.org/3/person/$personId/combined_credits?api_key=$apikey',
-      ),
-    );
-
-    if (response.statusCode == 200) {
-      return actorcreditsfromjson(response.body);
-    } else {
-      throw Exception('Failed to load person credits');
+    try {
+      final response = await _dio.get(
+        'person/$personId/combined_credits',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, actorcreditsfromjson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching person credits: ${e.message}');
+      rethrow;
     }
   }
 
   Future<Moviescredits?> getMovieCredits(int movieId) async {
-    final String url = "${baseUrl}movie/$movieId/credits?api_key=$apikey";
-
     try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        return moviesCreditsFromJson(response.body);
-      } else {
-        print('Failed to load credits: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching movie credits: $e');
+      final response = await _dio.get(
+        'movie/$movieId/credits',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, moviesCreditsFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching movie credits: ${e.message}');
       return null;
     }
   }
 
   Future<Seasoncast?> getSeasonCredits(int seriesId, int seasonNumber) async {
-    final String url =
-        "${baseUrl}tv/$seriesId/season/$seasonNumber/credits?api_key=$apikey";
-
     try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        return seasoncastFromJson(response.body);
-      } else {
-        print('Failed to load season credits: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching season credits: $e');
+      final response = await _dio.get(
+        'tv/$seriesId/season/$seasonNumber/credits',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, seasoncastFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching season credits: ${e.message}');
       return null;
     }
   }
 
   Future<Seriescredits?> getTvSeriesCredits(int tvId) async {
-    final String url = "${baseUrl}tv/$tvId/credits?api_key=$apikey";
-
     try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        return seriescreditsFromJson(response.body);
-      } else {
-        print('Failed to load series credits: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching series credits: $e');
+      final response = await _dio.get(
+        'tv/$tvId/credits',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, seriescreditsFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching TV credits: ${e.message}');
       return null;
     }
   }
 
   Future<Perasonsearch?> searchPerson(String query) async {
-    final url =
-        '${baseUrl}search/person?api_key=$apikey&query=${Uri.encodeComponent(query)}';
-
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        return perasonsearchFromJson(response.body);
-      } else {
-        print('Failed to search person: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Error searching person: $e');
+      final response = await _dio.get(
+        'search/person',
+        queryParameters: {'api_key': apikey, 'query': query},
+      );
+      return _parseResponse(response.data, perasonsearchFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error searching person: ${e.message}');
       return null;
     }
   }
 
   Future<Similar?> getSimilarMovies(int movieId) async {
     try {
-      final endPoint = "movie/$movieId/similar";
-      final apiUrl = "$baseUrl$endPoint?api_key=$apikey&language=en-US&page=1";
-      print("Fetching similar movies from: $apiUrl");
-
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        try {
-          final data = similarFromJson(response.body);
-          print("Found ${data.results.length} similar movies");
-          return data;
-        } catch (e) {
-          print('Error parsing similar movies: $e');
-          return null;
-        }
-      } else {
-        print('API Error: ${response.statusCode} - ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Network error: $e');
+      final response = await _dio.get(
+        'movie/$movieId/similar',
+        queryParameters: {'api_key': apikey, 'language': 'en-US', 'page': 1},
+      );
+      return _parseResponse(response.data, similarFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching similar movies: ${e.message}');
       return null;
     }
   }
 
   Future<SimilarSeries?> getSimilarSeries(int tvSeriesId) async {
     try {
-      final endPoint = "tv/$tvSeriesId/similar";
-      final apiUrl = "$baseUrl$endPoint?api_key=$apikey&language=en-US&page=1";
-      print("Fetching similar series from: $apiUrl");
-
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        try {
-          final data = similarSeriesFromJson(response.body);
-          print("Found ${data.results.length} similar series");
-          return data;
-        } catch (e) {
-          print('Error parsing similar series: $e');
-          return null;
-        }
-      } else {
-        print('API Error: ${response.statusCode} - ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Network error: $e');
+      final response = await _dio.get(
+        'tv/$tvSeriesId/similar',
+        queryParameters: {'api_key': apikey, 'language': 'en-US', 'page': 1},
+      );
+      return _parseResponse(response.data, similarSeriesFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching similar series: ${e.message}');
       return null;
     }
   }
 
   Future<RecommendedSeries?> getRecommendedSeries(int seriesId) async {
     try {
-      final endPoint = "tv/$seriesId/recommendations";
-      final apiUrl = "$baseUrl$endPoint?api_key=$apikey";
-      print("Fetching recommended series from: $apiUrl");
-
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        try {
-          final data = recommendedFromJson(response.body);
-          print("Found ${data.results.length} recommended series");
-          return data;
-        } catch (e) {
-          print('Error parsing recommended series: $e');
-          return null;
-        }
-      } else {
-        print('API Error: ${response.statusCode} - ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Network error: $e');
+      final response = await _dio.get(
+        'tv/$seriesId/recommendations',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, recommendedFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching recommended series: ${e.message}');
       return null;
     }
   }
 
-  Future<RecommendedMovies?> getRecommendedMovies(int seriesId) async {
+  Future<RecommendedMovies?> getRecommendedMovies(int movieId) async {
     try {
-      final endPoint = "movie/$seriesId/recommendations";
-      final apiUrl = "$baseUrl$endPoint?api_key=$apikey";
-      print("Fetching recommended series from: $apiUrl");
-
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        try {
-          final data = recommendedMoviesFromJson(response.body);
-          print("Found ${data.results.length} recommended movies");
-          return data;
-        } catch (e) {
-          print('Error parsing recommended series: $e');
-          return null;
-        }
-      } else {
-        print('API Error: ${response.statusCode} - ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Network error: $e');
+      final response = await _dio.get(
+        'movie/$movieId/recommendations',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, recommendedMoviesFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching recommended movies: ${e.message}');
       return null;
     }
   }
@@ -420,70 +312,26 @@ class ApiService {
     int seasonNumber,
   ) async {
     try {
-      // Don't modify the season number - use it as requested
-      final url = '${baseUrl}tv/$seriesId/season/$seasonNumber?api_key=$apikey';
-      debugPrint('Fetching episode details from: $url');
-
-      final response = await http.get(Uri.parse(url));
-
-      debugPrint('Response status: ${response.statusCode}');
-      // debugPrint('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        try {
-          final episodeDetails = episodeDetailsFromJson(response.body);
-          debugPrint('Successfully parsed episode details');
-          return episodeDetails;
-        } catch (parseError) {
-          debugPrint('Error parsing JSON response: $parseError');
-          debugPrint('Raw response: ${response.body}');
-          return null;
-        }
-      } else if (response.statusCode == 404) {
-        debugPrint('Season $seasonNumber not found for series $seriesId');
-        // Return null - let the provider handle the fallback logic
-        return null;
-      } else {
-        debugPrint(
-          'Failed to fetch episode details: ${response.statusCode} - ${response.reasonPhrase}',
-        );
-        debugPrint('Response body: ${response.body}');
-
-        // Parse error response to get more details
-        try {
-          final errorResponse = json.decode(response.body);
-          final errorMessage =
-              errorResponse['status_message'] ?? 'Unknown error';
-          throw Exception('Failed to load episode details: $errorMessage');
-        } catch (e) {
-          throw Exception(
-            'Failed to load episode details: ${response.statusCode} - ${response.reasonPhrase}',
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching episode details: $e');
+      final response = await _dio.get(
+        'tv/$seriesId/season/$seasonNumber',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, episodeDetailsFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching episode details: ${e.message}');
       return null;
     }
   }
 
   Future<Map<String, dynamic>?> getExternalIds(int seriesId) async {
     try {
-      final url = '${baseUrl}tv/$seriesId/external_ids?api_key=$apikey';
-      debugPrint('Fetching external IDs from: $url');
-
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        debugPrint('External IDs: $data');
-        return data;
-      } else {
-        debugPrint('Failed to fetch external IDs: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      debugPrint('Error fetching external IDs: $e');
+      final response = await _dio.get(
+        'tv/$seriesId/external_ids',
+        queryParameters: {'api_key': apikey},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      debugPrint('Error fetching external IDs: ${e.message}');
       return null;
     }
   }

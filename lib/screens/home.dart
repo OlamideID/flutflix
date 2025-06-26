@@ -6,76 +6,69 @@ import 'package:netflix/components/movies/movie_section.dart';
 import 'package:netflix/components/series/series_section.dart';
 import 'package:netflix/providers/providers.dart';
 
-class NetflixHome extends StatelessWidget {
+class NetflixHome extends StatefulWidget {
   const NetflixHome({super.key, required this.search});
 
   final VoidCallback search;
 
   @override
-  Widget build(BuildContext context) {
-    final popularTvKey = GlobalKey();
-    final trendingMoviesKey = GlobalKey();
+  State<NetflixHome> createState() => _NetflixHomeState();
+}
 
-    void scrollTo(GlobalKey key) {
+class _NetflixHomeState extends State<NetflixHome> {
+  final GlobalKey trendingMoviesKey = GlobalKey();
+  final GlobalKey popularTvKey = GlobalKey();
+
+  void scrollTo(GlobalKey key) {
+    final context = key.currentContext;
+    if (context != null) {
       Scrollable.ensureVisible(
-        key.currentContext!,
+        context,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-            SliverToBoxAdapter(child: NetflixAppBar(search: search)),
-
-            SliverToBoxAdapter(
-              child: NetflixMenuBar(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(top: 20, bottom: 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NetflixAppBar(search: widget.search),
+              NetflixMenuBar(
                 tv: () => scrollTo(popularTvKey),
                 movies: () => scrollTo(trendingMoviesKey),
               ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-            const SliverToBoxAdapter(child: FeaturedMovieCarousel()),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 30)),
-
-            SliverToBoxAdapter(
-              key: trendingMoviesKey,
-              child: MovieSection(
+              const SizedBox(height: 10),
+              const FeaturedMovieCarousel(),
+              const SizedBox(height: 30),
+              MovieSection(
+                key: trendingMoviesKey,
                 provider: trendingMoviesProvider,
                 sectionTitle: 'Trending Movies',
               ),
-            ),
-
-            SliverToBoxAdapter(
-              child: MovieSection(
+              MovieSection(
                 provider: upcomingMoviesProvider,
                 sectionTitle: 'Upcoming Movies',
               ),
-            ),
-
-            SliverToBoxAdapter(
-              key: popularTvKey,
-              child: SeriesSection(
+              SeriesSection(
+                
+                key: popularTvKey,
                 provider: popularSeriesProvider,
                 sectionTitle: 'Popular TV Series',
               ),
-            ),
-
-            SliverToBoxAdapter(
-              child: MovieSection(
+              MovieSection(
                 provider: topRatedMoviesProvider,
                 sectionTitle: 'Top Rated Movies',
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -5,8 +5,7 @@ import 'package:netflix/screens/splash.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Set system UI overlay style for better video experience
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -15,15 +14,14 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
-  
-  // Set preferred orientations (optional - allows landscape for video)
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  
+
   runApp(const MyApp());
 }
 
@@ -35,7 +33,7 @@ class MyApp extends StatelessWidget {
     return ProviderScope(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Netflix Clone',
+        title: 'Flutflix',
         theme: ThemeData(
           brightness: Brightness.dark,
           primarySwatch: Colors.red,

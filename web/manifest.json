@@ -1,11 +1,11 @@
 {
-    "name": "netflix",
-    "short_name": "netflix",
+    "name": "Flutflix",
+    "short_name": "Flutflix",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Flutflix.... Made by Olamide",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
