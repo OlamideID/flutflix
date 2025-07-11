@@ -10,6 +10,8 @@ import 'package:netflix/components/movies/movie_cast.dart';
 import 'package:netflix/components/movies/recommended_section.dart';
 import 'package:netflix/components/movies/similar_movies_section.dart';
 import 'package:netflix/models/movie_details_model.dart';
+import 'package:netflix/models/movie_trailer.dart';
+import 'package:netflix/providers/providers.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -31,35 +33,60 @@ class MovieDetailsScreen extends ConsumerStatefulWidget {
 
 class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
   bool _isLoading = false;
-  bool _showPlayer = false;
+  bool _showTrailer = false;
   String? _errorMessage;
-  String _iframeViewType = '';
+  String _trailerIframeViewType = '';
 
   @override
   void initState() {
     super.initState();
-    _iframeViewType = 'video-player-${DateTime.now().millisecondsSinceEpoch}';
+    _trailerIframeViewType =
+        'trailer-player-${DateTime.now().millisecondsSinceEpoch}';
   }
 
   String _buildStreamingUrl() {
     return 'https://vidsrc.xyz/embed/movie?tmdb=${widget.movieId}&autoplay=1';
   }
 
-  void _startPlaying() {
+  String _buildTrailerUrl(String youtubeKey) {
+    return 'https://www.youtube.com/embed/$youtubeKey?autoplay=1&rel=0&showinfo=0&controls=1';
+  }
+
+  Future<void> _startPlaying() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final url = _buildStreamingUrl();
+      await openUrl(url);
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error starting video: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _playTrailer(String youtubeKey) {
     if (kIsWeb) {
       try {
         setState(() {
           _isLoading = true;
         });
 
-        final streamingUrl = _buildStreamingUrl();
-        debugPrint('Loading streaming URL: $streamingUrl');
+        final trailerUrl = _buildTrailerUrl(youtubeKey);
+        debugPrint('Loading trailer URL: $trailerUrl');
 
         ui.platformViewRegistry.registerViewFactory(
-          _iframeViewType,
+          _trailerIframeViewType,
           (int viewId) =>
               html.IFrameElement()
-                ..src = streamingUrl
+                ..src = trailerUrl
                 ..style.border = 'none'
                 ..style.width = '100%'
                 ..style.height = '100%'
@@ -69,27 +96,59 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
         );
 
         setState(() {
-          _showPlayer = true;
+          _showTrailer = true;
           _isLoading = false;
           _errorMessage = null;
         });
       } catch (e) {
-        debugPrint('Error starting playback: $e');
+        debugPrint('Error starting trailer: $e');
         setState(() {
-          _errorMessage = 'Error starting video: $e';
+          _errorMessage = 'Error starting trailer: $e';
           _isLoading = false;
         });
       }
     } else {
-      // Fall back to URL launch for non-web platforms
-      final url = 'https://vidsrc.icu/embed/movie/${widget.movieId}';
-      openUrl(url);
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              backgroundColor: Colors.grey[900],
+              title: const Text(
+                'Watch Trailer',
+                style: TextStyle(color: Colors.white),
+              ),
+              content: const Text(
+                'Would you like to watch this trailer on YouTube?',
+                style: TextStyle(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    final url = 'https://www.youtube.com/watch?v=$youtubeKey';
+                    openUrl(url);
+                  },
+                  child: const Text(
+                    'Open YouTube',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+      );
     }
   }
 
-  void _stopPlaying() {
+  void _stopTrailer() {
     setState(() {
-      _showPlayer = false;
+      _showTrailer = false;
     });
   }
 
@@ -104,77 +163,279 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
     }
   }
 
+  Widget _buildTrailerPlayer() {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Trailer', style: TextStyle(color: Colors.white)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: _stopTrailer,
+            tooltip: 'Close Trailer',
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          if (_errorMessage != null)
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      _errorMessage ?? 'Unknown error',
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _stopTrailer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            )
+          else if (kIsWeb)
+            HtmlElementView(viewType: _trailerIframeViewType)
+          else
+            const Center(
+              child: Text(
+                'Trailer playback is only supported on web platform',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator(color: Colors.red)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrailerSection(MovieTrailer trailerData) {
+    final youtubeTrailers =
+        trailerData.results
+            .where(
+              (video) =>
+                  video.site.toLowerCase() == 'youtube' &&
+                  video.type.toLowerCase() == 'trailer',
+            )
+            .toList();
+
+    if (youtubeTrailers.isEmpty) return const SizedBox.shrink();
+
+    youtubeTrailers.sort((a, b) {
+      if (a.official && !b.official) return -1;
+      if (!a.official && b.official) return 1;
+      return b.publishedAt.compareTo(a.publishedAt);
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Trailers',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: youtubeTrailers.length,
+            itemBuilder: (context, index) {
+              final trailer = youtubeTrailers[index];
+              final thumbnailUrl =
+                  'https://img.youtube.com/vi/${trailer.key}/hqdefault.jpg';
+
+              return Container(
+                width: 300,
+                margin: const EdgeInsets.only(right: 16),
+                child: InkWell(
+                  onTap: () => _playTrailer(trailer.key),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey[900],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(8),
+                                ),
+                                child: CachedNetworkImage(
+                                  imageUrl: thumbnailUrl,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) => Container(
+                                        color: Colors.grey[800],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        color: Colors.grey[800],
+                                        child: const Icon(
+                                          Icons.video_library,
+                                          color: Colors.white,
+                                          size: 50,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                              const Center(
+                                child: CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: Colors.black54,
+                                  child: Icon(
+                                    Icons.play_arrow,
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
+                              if (trailer.official)
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'OFFICIAL',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                trailer.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatDate(trailer.publishedAt),
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000000) {
+      return '${(number / 1000000000).toStringAsFixed(1)}B';
+    }
+    if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
+    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
+    return number.toString();
+  }
+
+  Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_showPlayer) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text(
-            'Now Playing',
-            style: TextStyle(color: Colors.white),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: _stopPlaying,
-              tooltip: 'Close Player',
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            if (_errorMessage != null)
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 64,
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(color: Colors.white),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _startPlaying,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              )
-            else if (kIsWeb)
-              HtmlElementView(viewType: _iframeViewType)
-            else
-              const Center(
-                child: Text(
-                  'Video playback is only supported on web platform',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator(color: Colors.red)),
-          ],
-        ),
-      );
+    if (_showTrailer) {
+      return _buildTrailerPlayer();
     }
 
     final size = MediaQuery.of(context).size;
     final movieAsync = ref.watch(movieDetailsProvider(widget.movieId));
+    final trailerAsync = ref.watch(movieTrailerProvider(widget.movieId));
 
     return movieAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -309,7 +570,7 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: _startPlaying,
+                              onPressed: _isLoading ? null : _startPlaying,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.black,
@@ -318,13 +579,23 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
                                 ),
                               ),
                               icon: const Icon(Icons.play_arrow, size: 24),
-                              label: const Text(
-                                'Play',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              label:
+                                  _isLoading
+                                      ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.black,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                      : const Text(
+                                        'Watch Now',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -351,6 +622,16 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
+                      trailerAsync.when(
+                        loading: () => const SizedBox.shrink(),
+                        error: (error, _) => const SizedBox.shrink(),
+                        data: (trailerData) {
+                          if (trailerData == null) {
+                            return const SizedBox.shrink();
+                          }
+                          return _buildTrailerSection(trailerData);
+                        },
+                      ),
                       if ((movie.tagline?.isNotEmpty ?? false)) ...[
                         Text(
                           '"${movie.tagline}"',
@@ -518,33 +799,5 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
         );
       },
     );
-  }
-
-  Widget _buildStatRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 16)),
-          Flexible(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatNumber(int number) {
-    if (number >= 1000000000) {
-      return '${(number / 1000000000).toStringAsFixed(1)}B';
-    }
-    if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
-    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
-    return number.toString();
   }
 }

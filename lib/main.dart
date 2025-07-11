@@ -1,3 +1,5 @@
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +24,13 @@ void main() async {
     DeviceOrientation.landscapeRight,
   ]);
 
-  runApp(const MyApp());
+  runApp(
+    DevicePreview(
+      backgroundColor: Colors.grey[500],
+      enabled: !kReleaseMode,
+      builder: (context) => const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -32,6 +40,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ProviderScope(
       child: MaterialApp(
+        useInheritedMediaQuery: true,
         debugShowCheckedModeBanner: false,
         title: 'Flutflix',
         theme: ThemeData(
@@ -44,6 +53,8 @@ class MyApp extends StatelessWidget {
             iconTheme: IconThemeData(color: Colors.white),
           ),
         ),
+        locale: DevicePreview.locale(context),
+        builder: DevicePreview.appBuilder,
         home: const SplashScreen(),
       ),
     );

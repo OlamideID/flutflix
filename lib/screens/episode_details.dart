@@ -260,7 +260,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                       ),
                     ),
 
-                  // Gradient Overlay
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -276,7 +275,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                     ),
                   ),
 
-                  // Play Button Overlay
                   Center(
                     child: Container(
                       decoration: BoxDecoration(
@@ -390,7 +388,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Episode Metadata
                   Wrap(
                     spacing: 16,
                     runSpacing: 8,
@@ -416,7 +413,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
             ),
           ),
 
-          // Play Button Section
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),

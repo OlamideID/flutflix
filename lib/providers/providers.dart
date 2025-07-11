@@ -2,10 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/models/actor_credits.dart';
 import 'package:netflix/models/actor_profile.dart';
+import 'package:netflix/models/airing_today_tv.dart';
 import 'package:netflix/models/episode_details.dart';
 import 'package:netflix/models/movie_credits.dart';
 import 'package:netflix/models/movie_details_model.dart';
 import 'package:netflix/models/movie_model.dart';
+import 'package:netflix/models/movie_trailer.dart';
 import 'package:netflix/models/popular_series.dart';
 import 'package:netflix/models/recommend_movies.dart';
 import 'package:netflix/models/recommended_series.dart';
@@ -29,6 +31,15 @@ final trendingMoviesProvider = FutureProvider<Trending?>((ref) async {
   ref.keepAlive();
   final api = ref.read(apiServiceProvider);
   return api.trendingMovies();
+});
+
+final movieTrailerProvider = FutureProvider.family<MovieTrailer?, int>((
+  ref,
+  movieId,
+) async {
+  ref.keepAlive();
+  final api = ref.read(apiServiceProvider);
+  return api.fetchMovieTrailer(movieId);
 });
 
 final upcomingMoviesProvider = FutureProvider<UpcomingMovie?>((ref) async {
@@ -55,7 +66,6 @@ final topRatedMoviesProvider = FutureProvider<Toprated?>((ref) async {
   return api.topRatedMovies();
 });
 
-// Movie-related providers
 final movieDetailsProvider = FutureProvider.family<Moviedetail?, int>((
   ref,
   movieId,
@@ -90,7 +100,6 @@ final movieCreditsProvider = FutureProvider.family<Moviescredits?, int>((
   return api.getMovieCredits(movieId);
 });
 
-// TV Series-related providers
 final seriesDetailsProvider = FutureProvider.family<SeriesDetails?, int>((
   ref,
   seriesId,
@@ -154,7 +163,6 @@ final externalIdsProvider = FutureProvider.family<Map<String, dynamic>?, int>((
   return api.getExternalIds(seriesId);
 });
 
-// Person/actor-related providers
 final personDetailsProvider = FutureProvider.family<Actorprofile?, int>((
   ref,
   personId,
@@ -162,6 +170,14 @@ final personDetailsProvider = FutureProvider.family<Actorprofile?, int>((
   ref.keepAlive();
   final api = ref.read(apiServiceProvider);
   return api.getPersonDetails(personId);
+});
+
+final airingTodaySeriesProvider = FutureProvider<AiringTodaySeries?>((
+  ref,
+) async {
+  ref.keepAlive();
+  final api = ref.read(apiServiceProvider);
+  return api.getAiringTodaySeries();
 });
 
 final personCreditsProvider = FutureProvider.family<ActorCredits, int>((

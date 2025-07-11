@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:netflix/common/utils.dart';
 import 'package:netflix/models/actor_credits.dart';
 import 'package:netflix/models/actor_profile.dart';
+import 'package:netflix/models/airing_today_tv.dart';
 import 'package:netflix/models/episode_details.dart';
 import 'package:netflix/models/movie_credits.dart';
 import 'package:netflix/models/movie_details_model.dart';
 import 'package:netflix/models/movie_model.dart';
+import 'package:netflix/models/movie_trailer.dart';
 import 'package:netflix/models/person_search.dart';
 import 'package:netflix/models/popular_series.dart';
 import 'package:netflix/models/recommend_movies.dart';
@@ -31,7 +33,7 @@ class ApiService {
   ApiService()
     : _dio = Dio(
         BaseOptions(
-          baseUrl: 'https://api.themoviedb.org/3/',
+          baseUrl: baseUrl,
           connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 3),
         ),
@@ -124,6 +126,19 @@ class ApiService {
       return null;
     }
   }
+
+  Future<AiringTodaySeries?> getAiringTodaySeries() async {
+  try {
+    final response = await _dio.get(
+      'tv/airing_today',
+      queryParameters: {'api_key': apikey},
+    );
+    return _parseResponse(response.data, airingTodaySeriesFromJson);
+  } on DioException catch (e) {
+    debugPrint('Error fetching airing today series: ${e.message}');
+    return null;
+  }
+}
 
   Future<SeriesDetails?> seriesDetail(int id) async {
     try {
@@ -323,6 +338,20 @@ class ApiService {
     }
   }
 
+  
+  Future<MovieTrailer?> fetchMovieTrailer(int movieID) async {
+  try {
+    final response = await _dio.get(
+      'movie/$movieID/videos',
+      queryParameters: {'api_key': apikey},
+    );
+    return _parseResponse(response.data, movieTrailerFromJson);
+  } on DioException catch (e) {
+    debugPrint('Error fetching movie trailer: ${e.message}');
+    return null;
+  }
+}
+
   Future<Map<String, dynamic>?> getExternalIds(int seriesId) async {
     try {
       final response = await _dio.get(
@@ -335,4 +364,10 @@ class ApiService {
       return null;
     }
   }
+
+
+
 }
+
+
+
