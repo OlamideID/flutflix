@@ -123,6 +123,7 @@ class _NetflixHomeState extends ConsumerState<NetflixHome> {
           children: [
             Expanded(
               child: InkWell(
+                borderRadius: BorderRadius.circular(30),
                 onTap: () => setState(() => showMovies = true),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -141,6 +142,7 @@ class _NetflixHomeState extends ConsumerState<NetflixHome> {
             ),
             Expanded(
               child: InkWell(
+                borderRadius: BorderRadius.circular(30),
                 onTap: () => setState(() => showMovies = false),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -199,10 +201,6 @@ class _NetflixHomeState extends ConsumerState<NetflixHome> {
           provider: airingTodaySeriesProvider,
           sectionTitle: 'Airing Today',
         ),
-        // SeriesSection(
-        //   provider: recommendedSeriesProvider(1399),
-        //   sectionTitle: 'Recommended (Game of Thrones)',
-        // ),
         SeriesSection(
           provider: recommendedSeriesProvider(randomSeriesId),
           sectionTitle: 'Random Picks for You',

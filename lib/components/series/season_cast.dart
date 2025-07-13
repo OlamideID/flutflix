@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/providers/providers.dart'; // make sure your seasonCreditsProvider is exported here
+import 'package:netflix/providers/providers.dart';
 import 'package:netflix/screens/actor_profile_screen.dart';
 
 class SeasonCastSection extends ConsumerWidget {
@@ -21,17 +21,19 @@ class SeasonCastSection extends ConsumerWidget {
     );
 
     return creditsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          'Failed to load season $seasonNumber cast',
-          style: TextStyle(color: Colors.red[200]),
-        ),
-      ),
+      loading:
+          () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+      error:
+          (e, _) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Failed to load season $seasonNumber cast',
+              style: TextStyle(color: Colors.red[200]),
+            ),
+          ),
       data: (credits) {
         if (credits == null || credits.cast.isEmpty) {
           return Padding(
@@ -71,7 +73,9 @@ class SeasonCastSection extends ConsumerWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ActorProfileScreen(actorId: actor.id),
+                          builder:
+                              (context) =>
+                                  ActorProfileScreen(actorId: actor.id),
                         ),
                       );
                     },
@@ -84,25 +88,28 @@ class SeasonCastSection extends ConsumerWidget {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: CachedNetworkImage(
-                              imageUrl: actor.profilePath != null
-                                  ? 'https://image.tmdb.org/t/p/w200${actor.profilePath}'
-                                  : 'https://via.placeholder.com/200x300?text=No+Image',
+                              imageUrl:
+                                  actor.profilePath != null
+                                      ? 'https://image.tmdb.org/t/p/w200${actor.profilePath}'
+                                      : 'https://via.placeholder.com/200x300?text=No+Image',
                               height: 120,
                               width: 100,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                color: Colors.grey[800],
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                color: Colors.grey[800],
-                                child: const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              placeholder:
+                                  (context, url) => Container(
+                                    color: Colors.grey[800],
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) => Container(
+                                    color: Colors.grey[800],
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                             ),
                           ),
                           const SizedBox(height: 8),

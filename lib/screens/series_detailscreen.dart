@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_null_comparison
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/components/header_section.dart';
@@ -7,8 +5,8 @@ import 'package:netflix/components/series/episode_card.dart';
 import 'package:netflix/components/series/info_card.dart';
 import 'package:netflix/components/series/recommendedseries.dart';
 import 'package:netflix/components/series/season_card.dart';
-import 'package:netflix/components/series/similar_series.dart';
 import 'package:netflix/components/series/series_cast.dart';
+import 'package:netflix/components/series/similar_series.dart';
 import 'package:netflix/models/series_details.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -65,8 +63,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // _buildActionButtons(),
-                      // const SizedBox(height: 24),
                       if (series.tagline.isNotEmpty)
                         _buildTagline(series.tagline),
                       _buildSectionTitle(series.name),
@@ -85,8 +81,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         _buildGenresSection(series.genres),
                       if (series.seasons.isNotEmpty)
                         _buildSeasonsSection(series.seasons, series),
-                      if (series.lastEpisodeToAir != null)
-                        _buildLastEpisodeSection(series.lastEpisodeToAir),
+                      _buildLastEpisodeSection(series.lastEpisodeToAir),
                       if (series.networks.isNotEmpty)
                         _buildNetworksSection(series.networks),
                       if (series.productionCompanies.isNotEmpty)
@@ -144,19 +139,26 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle('Genres'),
+        const SizedBox(height: 8),
         Wrap(
-          spacing: 8,
+          spacing: 12,
+          runSpacing: 12,
           children:
               genres
                   .map(
                     (genre) => Chip(
                       label: Text(genre.name),
-                      backgroundColor: Colors.grey[900],
+                      backgroundColor: Colors.grey[850],
+                      labelStyle: const TextStyle(color: Colors.white),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                     ),
                   )
                   .toList(),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
       ],
     );
   }
