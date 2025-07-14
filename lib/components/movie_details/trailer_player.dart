@@ -1,10 +1,6 @@
-// movie_trailer_player.dart
-import 'dart:html' as html;
-import 'dart:ui_web' as ui;
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class MovieTrailerPlayer {
   final VoidCallback onTrailerStarted;
@@ -12,7 +8,8 @@ class MovieTrailerPlayer {
   final ValueChanged<bool> onLoadingChanged;
   final ValueChanged<String?> onErrorChanged;
 
-  String _trailerIframeViewType = '';
+  late WebViewController _webViewController;
+  bool _isControllerInitialized = false;
 
   MovieTrailerPlayer({
     required this.onTrailerStarted,
@@ -20,79 +17,122 @@ class MovieTrailerPlayer {
     required this.onLoadingChanged,
     required this.onErrorChanged,
   }) {
-    _trailerIframeViewType = 'trailer-player-${DateTime.now().millisecondsSinceEpoch}';
+    _initializeWebViewController();
+  }
+
+  void _initializeWebViewController() {
+    _webViewController =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setBackgroundColor(Colors.black)
+          ..setNavigationDelegate(
+            NavigationDelegate(
+              onProgress: (int progress) {
+                if (progress < 100) {
+                  onLoadingChanged(true);
+                } else {
+                  onLoadingChanged(false);
+                }
+              },
+              onPageStarted: (String url) {
+                onLoadingChanged(true);
+                debugPrint('Page started loading: $url');
+              },
+              onPageFinished: (String url) {
+                onLoadingChanged(false);
+                debugPrint('Page finished loading: $url');
+              },
+              onWebResourceError: (WebResourceError error) {
+                debugPrint('Web resource error: ${error.description}');
+                onErrorChanged('Error loading trailer: ${error.description}');
+                onLoadingChanged(false);
+              },
+              onNavigationRequest: (NavigationRequest request) {
+                if (request.url.contains('youtube.com') ||
+                    request.url.contains('youtu.be') ||
+                    request.url.contains('googlevideo.com') ||
+                    request.url.contains('ytimg.com')) {
+                  return NavigationDecision.navigate;
+                }
+                return NavigationDecision.prevent;
+              },
+            ),
+          );
+    _isControllerInitialized = true;
   }
 
   String _buildTrailerUrl(String youtubeKey) {
-    return 'https://www.youtube.com/embed/$youtubeKey?autoplay=1&rel=0&showinfo=0&controls=1';
+    return 'https://www.youtube.com/embed/$youtubeKey'
+        '?autoplay=1'
+        '&rel=0'
+        '&showinfo=0'
+        '&controls=1'
+        '&modestbranding=1'
+        '&fs=1';
   }
 
   void playTrailer(BuildContext context, String youtubeKey) {
-    if (kIsWeb) {
-      try {
-        onLoadingChanged(true);
-
-        final trailerUrl = _buildTrailerUrl(youtubeKey);
-        debugPrint('Loading trailer URL: $trailerUrl');
-
-        ui.platformViewRegistry.registerViewFactory(
-          _trailerIframeViewType,
-          (int viewId) => html.IFrameElement()
-            ..src = trailerUrl
-            ..style.border = 'none'
-            ..style.width = '100%'
-            ..style.height = '100%'
-            ..allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-            ..allowFullscreen = true,
-        );
-
-        onTrailerStarted();
-        onLoadingChanged(false);
-        onErrorChanged(null);
-      } catch (e) {
-        debugPrint('Error starting trailer: $e');
-        onErrorChanged('Error starting trailer: $e');
-        onLoadingChanged(false);
-      }
-    } else {
-      _showTrailerDialog(context, youtubeKey);
+    if (!_isControllerInitialized) {
+      onErrorChanged('WebView controller not initialized');
+      return;
     }
+
+    try {
+      onLoadingChanged(true);
+
+      final trailerUrl = _buildTrailerUrl(youtubeKey);
+      debugPrint('Loading trailer URL: $trailerUrl');
+
+      _webViewController.loadRequest(Uri.parse(trailerUrl));
+
+      onTrailerStarted();
+      onErrorChanged(null);
+    } catch (e) {
+      debugPrint('Error starting trailer: $e');
+      onErrorChanged('Error starting trailer: $e');
+      onLoadingChanged(false);
+    }
+  }
+
+  void playTrailerExternal(BuildContext context, String youtubeKey) {
+    _showTrailerDialog(context, youtubeKey);
   }
 
   void _showTrailerDialog(BuildContext context, String youtubeKey) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text(
-          'Watch Trailer',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'Would you like to watch this trailer on YouTube?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Watch Trailer',
               style: TextStyle(color: Colors.white),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              final url = 'https://www.youtube.com/watch?v=$youtubeKey';
-              _openUrl(url);
-            },
-            child: const Text(
-              'Open YouTube',
-              style: TextStyle(color: Colors.red),
+            content: const Text(
+              'Would you like to watch this trailer on YouTube?',
+              style: TextStyle(color: Colors.white70),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  final url = 'https://www.youtube.com/watch?v=$youtubeKey';
+                  _openUrl(url);
+                },
+                child: const Text(
+                  'Open YouTube',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -114,6 +154,7 @@ class MovieTrailerPlayer {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text('Trailer', style: TextStyle(color: Colors.white)),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
@@ -150,12 +191,12 @@ class MovieTrailerPlayer {
                 ],
               ),
             )
-          else if (kIsWeb)
-            HtmlElementView(viewType: _trailerIframeViewType)
+          else if (_isControllerInitialized)
+            WebViewWidget(controller: _webViewController)
           else
             const Center(
               child: Text(
-                'Trailer playback is only supported on web platform',
+                'Initializing trailer player...',
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -164,5 +205,17 @@ class MovieTrailerPlayer {
         ],
       ),
     );
+  }
+
+  void reloadTrailer() {
+    if (_isControllerInitialized) {
+      _webViewController.reload();
+    }
+  }
+
+  void stopTrailer() {
+    if (_isControllerInitialized) {
+      _webViewController.loadRequest(Uri.parse('about:blank'));
+    }
   }
 }

@@ -1,13 +1,12 @@
-// season_details_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/components/season_details.dart/utils.dart';
-import 'package:netflix/components/season_details.dart/video_player.dart';
 import 'package:netflix/components/season_details.dart/widgets/episode_list.dart';
 import 'package:netflix/components/season_details.dart/widgets/season_cast.dart';
 import 'package:netflix/components/season_details.dart/widgets/season_header.dart';
 import 'package:netflix/models/episode_details.dart';
 import 'package:netflix/screens/episode_details.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SeasonDetailsScreen extends ConsumerStatefulWidget {
   final int seriesId;
@@ -33,24 +32,8 @@ class SeasonDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _SeasonDetailsScreenState extends ConsumerState<SeasonDetailsScreen> {
-  late final VideoPlayerController _videoPlayerController;
-
-  @override
-  void initState() {
-    super.initState();
-    _videoPlayerController = VideoPlayerController();
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_videoPlayerController.showPlayer) {
-      return VideoPlayerScreen(
-        controller: _videoPlayerController,
-        seriesName: widget.seriesName,
-        seasonNumber: widget.seasonNumber,
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: _buildAppBar(),
@@ -109,9 +92,7 @@ class _SeasonDetailsScreenState extends ConsumerState<SeasonDetailsScreen> {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              if (widget.seasonId != null) {
-                debugPrint('Retrying with season ID: ${widget.seasonId}');
-              }
+              setState(() {});
             },
             child: const Text('Retry'),
           ),
@@ -127,11 +108,39 @@ class _SeasonDetailsScreenState extends ConsumerState<SeasonDetailsScreen> {
 
   Widget _buildSeasonContent(EpisodeDetails? seasonDetails) {
     if (seasonDetails == null) {
-      return SeasonNotAvailableWidget(
-        seasonNumber: widget.seasonNumber,
-        seriesId: widget.seriesId,
-        seriesName: widget.seriesName,
-        imdbId: widget.imdbId,
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.tv_off, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                'Season ${widget.seasonNumber} not available',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'This season might not exist for this series.',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Go Back',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -201,90 +210,37 @@ class _SeasonDetailsScreenState extends ConsumerState<SeasonDetailsScreen> {
     );
   }
 
-  void _startPlaying(Episode episode, EpisodeDetails seasonDetails) {
-    _videoPlayerController.startPlaying(
-      episode.episodeNumber,
-      seasonDetails,
-      widget.seriesId,
-      widget.seasonNumber,
-      widget.imdbId,
-    );
-  }
-}
+  Future<void> _startPlaying(
+    Episode episode,
+    EpisodeDetails seasonDetails,
+  ) async {
+    final int seasonNumber = widget.seasonNumber < 1 ? 1 : widget.seasonNumber;
+    final String? imdbId = widget.imdbId ?? seasonDetails.tmdbId?.imdbId;
+    final int? tmdbId = seasonDetails.tmdbId?.id;
 
-class SeasonNotAvailableWidget extends StatelessWidget {
-  final int seasonNumber;
-  final int seriesId;
-  final String seriesName;
-  final String? imdbId;
+    String url;
 
-  const SeasonNotAvailableWidget({
-    super.key,
-    required this.seasonNumber,
-    required this.seriesId,
-    required this.seriesName,
-    this.imdbId,
-  });
+    if (imdbId != null && imdbId.isNotEmpty) {
+      final formattedImdbId = imdbId.startsWith('tt') ? imdbId : 'tt$imdbId';
+      url =
+          'https://vidsrc.xyz/embed/tv?imdb=$formattedImdbId&season=$seasonNumber&episode=${episode.episodeNumber}&autoplay=1';
+    } else if (tmdbId != null && tmdbId > 0) {
+      url =
+          'https://vidsrc.xyz/embed/tv?tmdb=$tmdbId&season=$seasonNumber&episode=${episode.episodeNumber}&autoplay=1';
+    } else {
+      url =
+          'https://vidsrc.xyz/embed/tv?tmdb=${widget.seriesId}&season=$seasonNumber&episode=${episode.episodeNumber}&autoplay=1';
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.tv_off, color: Colors.grey, size: 64),
-          const SizedBox(height: 16),
-          Text(
-            seasonNumber == 0
-                ? 'Season 0 (Specials) not available'
-                : 'Season $seasonNumber not available',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'This season might not exist for this series.',
-            style: TextStyle(color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          if (seasonNumber != 1) ...[
-            ElevatedButton(
-              onPressed: () => _navigateToSeason1(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Go to Season 1'),
-            ),
-            const SizedBox(height: 8),
-          ],
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Go Back', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
+    final Uri uri = Uri.parse(url);
 
-  void _navigateToSeason1(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => SeasonDetailsScreen(
-              seriesId: seriesId,
-              seasonNumber: 1,
-              seasonId: null,
-              seasonName: 'Season 1',
-              seriesName: seriesName,
-              imdbId: imdbId,
-            ),
-      ),
-    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint('Could not launch $url');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open video link')),
+      );
+    }
   }
 }

@@ -1,12 +1,10 @@
-import 'dart:html' as html;
-import 'dart:ui_web' as ui;
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
 import 'package:netflix/models/episode_details.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EpisodeDetailsScreen extends ConsumerStatefulWidget {
   final Episode episode;
@@ -34,188 +32,53 @@ class EpisodeDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
-  bool _isLoading = false;
-  bool _showPlayer = false;
-  String? _errorMessage;
-  String _iframeViewType = '';
+  Future<void> _startPlaying() async {
+    final url = _buildStreamingUrl();
+    final uri = Uri.parse(url);
 
-  @override
-  void initState() {
-    super.initState();
-    _iframeViewType = 'video-player-${DateTime.now().millisecondsSinceEpoch}';
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open streaming link')),
+      );
+    }
   }
 
-  /// Constructs the streaming URL for vidsrc.xyz
   String _buildStreamingUrl() {
     final validSeasonNumber = widget.seasonNumber < 1 ? 1 : widget.seasonNumber;
+    final episodeNumber = widget.episode.episodeNumber;
 
-    // First priority: Use passed IMDB ID
     if (widget.imdbId != null && widget.imdbId!.isNotEmpty) {
-      final formattedImdbId =
+      final formatted =
           widget.imdbId!.startsWith('tt')
               ? widget.imdbId!
               : 'tt${widget.imdbId}';
-      return 'https://vidsrc.xyz/embed/tv?imdb=$formattedImdbId&season=$validSeasonNumber&episode=${widget.episode.episodeNumber}&autoplay=1';
+      return 'https://vidsrc.xyz/embed/tv?imdb=$formatted&season=$validSeasonNumber&episode=$episodeNumber&autoplay=1';
     }
 
-    // Second priority: Use IMDB ID from seasonDetails
     if (widget.seasonDetails?.tmdbId?.imdbId != null &&
         widget.seasonDetails!.tmdbId!.imdbId.isNotEmpty) {
-      final imdbIdFromDetails = widget.seasonDetails!.tmdbId!.imdbId;
-      final formattedImdbId =
-          imdbIdFromDetails.startsWith('tt')
-              ? imdbIdFromDetails
-              : 'tt$imdbIdFromDetails';
-      return 'https://vidsrc.xyz/embed/tv?imdb=$formattedImdbId&season=$validSeasonNumber&episode=${widget.episode.episodeNumber}&autoplay=1';
+      final imdb = widget.seasonDetails!.tmdbId!.imdbId;
+      final formatted = imdb.startsWith('tt') ? imdb : 'tt$imdb';
+      return 'https://vidsrc.xyz/embed/tv?imdb=$formatted&season=$validSeasonNumber&episode=$episodeNumber&autoplay=1';
     }
 
-    // Third priority: Use TMDB ID from seasonDetails
     if (widget.seasonDetails?.tmdbId?.id != null &&
         widget.seasonDetails!.tmdbId!.id > 0) {
-      return 'https://vidsrc.xyz/embed/tv?tmdb=${widget.seasonDetails!.tmdbId!.id}&season=$validSeasonNumber&episode=${widget.episode.episodeNumber}&autoplay=1';
+      return 'https://vidsrc.xyz/embed/tv?tmdb=${widget.seasonDetails!.tmdbId!.id}&season=$validSeasonNumber&episode=$episodeNumber&autoplay=1';
     }
 
-    // Final fallback: Use the original seriesId
-    return 'https://vidsrc.xyz/embed/tv?tmdb=${widget.seriesId}&season=$validSeasonNumber&episode=${widget.episode.episodeNumber}&autoplay=1';
-  }
-
-  void _startPlaying() {
-    if (kIsWeb) {
-      try {
-        final streamingUrl = _buildStreamingUrl();
-        debugPrint('Loading streaming URL: $streamingUrl');
-
-        // Register the iframe view factory for web
-        ui.platformViewRegistry.registerViewFactory(
-          _iframeViewType,
-          (int viewId) =>
-              html.IFrameElement()
-                ..src = streamingUrl
-                ..style.border = 'none'
-                ..style.width = '100%'
-                ..style.height = '100%'
-                ..allow =
-                    'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-                ..allowFullscreen = true,
-        );
-
-        setState(() {
-          _showPlayer = true;
-          _isLoading = false;
-          _errorMessage = null;
-        });
-      } catch (e) {
-        debugPrint('Error starting playback: $e');
-        setState(() {
-          _errorMessage = 'Error starting video: $e';
-          _isLoading = false;
-        });
-      }
-    } else {
-      setState(() {
-        _errorMessage = 'Video playback is only supported on web platform';
-      });
-    }
-  }
-
-  void _stopPlaying() {
-    setState(() {
-      _showPlayer = false;
-      _isLoading = false;
-      _errorMessage = null;
-    });
+    return 'https://vidsrc.xyz/embed/tv?tmdb=${widget.seriesId}&season=$validSeasonNumber&episode=$episodeNumber&autoplay=1';
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_showPlayer) {
-      return _buildVideoPlayerScreen();
-    }
-    return _buildEpisodeDetailsScreen();
-  }
-
-  Widget _buildVideoPlayerScreen() {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          widget.episode.name,
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: _stopPlaying,
-            tooltip: 'Close Player',
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          if (_errorMessage != null)
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 64),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _startPlaying,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            )
-          else if (kIsWeb)
-            HtmlElementView(viewType: _iframeViewType)
-          else
-            const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.web_asset_off, color: Colors.grey, size: 64),
-                  SizedBox(height: 16),
-                  Text(
-                    'Video playback is only supported on web platform',
-                    style: TextStyle(color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-
-          if (_isLoading)
-            Container(
-              color: Colors.black54,
-              child: const Center(
-                child: CircularProgressIndicator(color: Colors.red),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEpisodeDetailsScreen() {
     return Scaffold(
       backgroundColor: Colors.black,
       body: CustomScrollView(
         slivers: [
-          // Hero Section with Episode Still
+          // Hero Section
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
@@ -225,7 +88,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Episode Still Image
                   if (widget.episode.stillPath != null &&
                       widget.episode.stillPath!.isNotEmpty)
                     CachedNetworkImage(
@@ -259,7 +121,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                         size: 64,
                       ),
                     ),
-
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -274,7 +135,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                       ),
                     ),
                   ),
-
                   Center(
                     child: Container(
                       decoration: BoxDecoration(
@@ -304,38 +164,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Platform indicator
-                  if (!kIsWeb)
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Colors.orange,
-                            size: 16,
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Video playback is only available on web platform',
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  // Breadcrumb Navigation
                   Row(
                     children: [
                       Expanded(
@@ -351,7 +179,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -387,7 +214,6 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
                   Wrap(
                     spacing: 16,
                     runSpacing: 8,
@@ -420,31 +246,25 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton.icon(
-                  onPressed: kIsWeb ? _startPlaying : null,
+                  onPressed: _startPlaying,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kIsWeb ? Colors.red : Colors.grey,
+                    backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  icon: Icon(
-                    kIsWeb ? Icons.play_arrow : Icons.web_asset_off,
-                    size: 24,
-                  ),
-                  label: Text(
-                    kIsWeb ? 'Play Episode' : 'Web Only',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text(
+                    'Play Episode',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
             ),
           ),
 
-          // Overview Section
+          // Overview
           if (widget.episode.overview.isNotEmpty) ...[
             const SliverToBoxAdapter(
               child: Padding(
@@ -474,7 +294,7 @@ class _EpisodeDetailsScreenState extends ConsumerState<EpisodeDetailsScreen> {
             ),
           ],
 
-          // Debug Info Section
+          // Debug Info
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
