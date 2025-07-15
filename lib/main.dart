@@ -27,7 +27,7 @@ void main() async {
   runApp(
     DevicePreview(
       backgroundColor: Colors.grey[500],
-      enabled: !kReleaseMode,
+      enabled: !kReleaseMode && kIsWeb,
       builder: (context) => const MyApp(),
     ),
   );

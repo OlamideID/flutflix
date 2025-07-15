@@ -49,6 +49,12 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _trailerPlayer.dispose(); // Properly dispose of the YouTube player
+    super.dispose();
+  }
+
   Future<void> _startPlaying() async {
     try {
       setState(() {
@@ -69,13 +75,15 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
   }
 
   void _playTrailer(String youtubeKey) {
+    // The youtubeKey can be either a video ID or a full YouTube URL
+    // The MovieTrailerPlayer will handle the conversion
     _trailerPlayer.playTrailer(context, youtubeKey);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_showTrailer) {
-      return _trailerPlayer.buildTrailerPlayer(_errorMessage, _isLoading);
+      return _trailerPlayer.buildTrailerPlayer(_errorMessage, _isLoading, context);
     }
 
     final size = MediaQuery.of(context).size;
@@ -84,13 +92,12 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
 
     return movieAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error:
-          (error, _) => Center(
-            child: Text(
-              'Error: $error',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
+      error: (error, _) => Center(
+        child: Text(
+          'Error: $error',
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
       data: (movie) {
         if (movie == null) {
           return const Center(
@@ -159,20 +166,18 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
             CachedNetworkImage(
               imageUrl: imagePath != null ? "$imageUrl$imagePath" : '',
               fit: BoxFit.cover,
-              placeholder:
-                  (context, url) => Container(
-                    color: Colors.grey[800],
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-              errorWidget:
-                  (context, url, error) => Container(
-                    color: Colors.grey[800],
-                    child: const Icon(
-                      Icons.error,
-                      color: Colors.white,
-                      size: 50,
-                    ),
-                  ),
+              placeholder: (context, url) => Container(
+                color: Colors.grey[800],
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+              errorWidget: (context, url, error) => Container(
+                color: Colors.grey[800],
+                child: const Icon(
+                  Icons.error,
+                  color: Colors.white,
+                  size: 50,
+                ),
+              ),
             ),
             Container(
               decoration: BoxDecoration(
@@ -205,23 +210,22 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
             icon: const Icon(Icons.play_arrow, size: 24),
-            label:
-                _isLoading
-                    ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.black,
-                        strokeWidth: 2,
-                      ),
-                    )
-                    : const Text(
-                      'Watch Now',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+            label: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.black,
+                      strokeWidth: 2,
                     ),
+                  )
+                : const Text(
+                    'Watch Now',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(width: 12),
