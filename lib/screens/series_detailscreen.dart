@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/header_section.dart';
+import 'package:netflix/components/series/header_section.dart';
 import 'package:netflix/components/series/episode_card.dart';
 import 'package:netflix/components/series/info_card.dart';
 import 'package:netflix/components/series/recommendedseries.dart';

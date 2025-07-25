@@ -13,9 +13,8 @@ class PlatformYouTubePlayerController {
   bool _isPlayerReady = false;
   bool _isPlaying = false;
   bool _isMuted = false;
-  String _currentQuality = 'auto'; // Track current quality
-  bool _isFullScreen =
-      false; // Track fullscreen state (always false for web iframe)
+  String _currentQuality = 'auto';
+  bool _isFullScreen = false;
   html.IFrameElement? _iframe;
 
   PlatformYouTubePlayerController({
@@ -176,8 +175,6 @@ class PlatformYouTubePlayerController {
   void pause() {
     _isPlaying = false;
     debugPrint('Pause (Web) - Use YouTube player controls');
-    // For iframe implementation, user needs to use native controls
-    // or implement YouTube Player API with postMessage
   }
 
   void dispose() {

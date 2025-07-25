@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/home_app_bar.dart';
-import 'package:netflix/components/home_menu_bar.dart';
+import 'package:netflix/components/home/home_app_bar.dart';
+import 'package:netflix/components/home/home_menu_bar.dart';
 import 'package:netflix/components/movies/featured_carousel.dart';
 import 'package:netflix/components/movies/movie_section.dart';
 import 'package:netflix/components/series/series_section.dart';

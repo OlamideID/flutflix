@@ -1,6 +1,6 @@
 // widgets/netflix_menu_bar.dart
 import 'package:flutter/material.dart';
-import 'package:netflix/components/home_menu_button.dart';
+import 'package:netflix/components/home/home_menu_button.dart';
 
 class NetflixMenuBar extends StatelessWidget {
   const NetflixMenuBar({super.key, required this.tv, required this.movies});

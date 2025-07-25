@@ -1,4 +1,4 @@
-// screens/actor_profile_screen.dart
+
 // ignore_for_file: unnecessary_null_comparison
 
 import 'package:cached_network_image/cached_network_image.dart';
