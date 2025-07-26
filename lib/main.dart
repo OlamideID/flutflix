@@ -3,10 +3,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:netflix/screens/splash.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  // Open boxes for your services
+  try {
+    await Hive.openBox('myListBox'); // For MyListService
+    await Hive.openBox('seriesFavoritesBox'); // For SeriesFavoritesService
+  } catch (e) {
+    debugPrint('Error opening Hive boxes: $e');
+  }
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

@@ -7,6 +7,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:netflix/constants/colors.dart';
 import 'package:netflix/screens/home.dart';
+import 'package:netflix/screens/my_list.dart';
 import 'package:netflix/screens/search.dart';
 
 class NavBarScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _NavBarScreenState extends State<NavBarScreen> {
         },
       ),
       const SearchScreen(),
-      const Scaffold(body: Center(child: Text('Something is coming'))),
+      MyListScreen(),
     ];
   }
 
@@ -78,7 +79,7 @@ class _NavBarScreenState extends State<NavBarScreen> {
             tabs: const [
               GButton(icon: Iconsax.home5, text: 'Home'),
               GButton(icon: Iconsax.search_normal, text: 'Search'),
-              GButton(icon: Icons.photo_library, text: 'Hot News'),
+              GButton(icon: Icons.my_library_add, text: 'My List'),
             ],
           ),
         ),

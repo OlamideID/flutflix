@@ -1,13 +1,17 @@
+// Updated series_details_screen.dart - Add these imports and modifications
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/series/header_section.dart';
 import 'package:netflix/components/series/episode_card.dart';
+import 'package:netflix/components/series/header_section.dart';
 import 'package:netflix/components/series/info_card.dart';
 import 'package:netflix/components/series/recommendedseries.dart';
 import 'package:netflix/components/series/season_card.dart';
 import 'package:netflix/components/series/series_cast.dart';
 import 'package:netflix/components/series/similar_series.dart';
 import 'package:netflix/models/series_details.dart';
+import 'package:netflix/providers/series_fav.dart';
+import 'package:netflix/screens/my_list.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -32,6 +36,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final seriesAsync = ref.watch(seriesDetailsProvider(widget.id));
+    final isInFavoritesAsync = ref.watch(
+      isSeriesInFavoritesProvider(widget.id),
+    );
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -63,6 +70,10 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Add to Favorites Button
+                      _buildFavoritesButton(series, isInFavoritesAsync),
+                      const SizedBox(height: 16),
+
                       if (series.tagline.isNotEmpty)
                         _buildTagline(series.tagline),
                       _buildSectionTitle(series.name),
@@ -104,6 +115,142 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildFavoritesButton(
+    SeriesDetails series,
+    AsyncValue<bool> isInFavoritesAsync,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: isInFavoritesAsync.when(
+        loading:
+            () => ElevatedButton(
+              onPressed: null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Loading...', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+            ),
+        error:
+            (_, __) => ElevatedButton(
+              onPressed:
+                  () => ref.refresh(isSeriesInFavoritesProvider(widget.id)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.refresh, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text('Retry', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+            ),
+        data:
+            (isInFavorites) => ElevatedButton(
+              onPressed: () => _toggleFavorites(series, isInFavorites),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isInFavorites ? Colors.red : Colors.grey[800],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isInFavorites ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    isInFavorites ? 'Remove from My List' : 'Add to My List',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorites(
+    SeriesDetails series,
+    bool isCurrentlyInFavorites,
+  ) async {
+    final notifier = ref.read(seriesFavoritesNotifierProvider.notifier);
+    bool success = false;
+    String message = '';
+
+    if (isCurrentlyInFavorites) {
+      success = await notifier.removeSeries(series.id);
+      message =
+          success
+              ? '${series.name} removed from My List'
+              : 'Failed to remove from My List';
+    } else {
+      success = await notifier.addSeries(series);
+      message =
+          success
+              ? '${series.name} added to My List'
+              : 'Series already in My List';
+    }
+
+    if (mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+
+      // Clear any existing SnackBars before showing a new one
+      messenger.clearSnackBars();
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: success ? Colors.green : Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 2),
+          action:
+              success && !isCurrentlyInFavorites
+                  ? SnackBarAction(
+                    label: 'VIEW LIST',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyListScreen(),
+                        ),
+                      );
+                    },
+                  )
+                  : null,
+        ),
+      );
+    }
   }
 
   Widget _buildTagline(String tagline) {

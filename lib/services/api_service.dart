@@ -128,17 +128,17 @@ class ApiService {
   }
 
   Future<AiringTodaySeries?> getAiringTodaySeries() async {
-  try {
-    final response = await _dio.get(
-      'tv/airing_today',
-      queryParameters: {'api_key': apikey},
-    );
-    return _parseResponse(response.data, airingTodaySeriesFromJson);
-  } on DioException catch (e) {
-    debugPrint('Error fetching airing today series: ${e.message}');
-    return null;
+    try {
+      final response = await _dio.get(
+        'tv/airing_today',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, airingTodaySeriesFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching airing today series: ${e.message}');
+      return null;
+    }
   }
-}
 
   Future<SeriesDetails?> seriesDetail(int id) async {
     try {
@@ -338,19 +338,18 @@ class ApiService {
     }
   }
 
-  
   Future<MovieTrailer?> fetchMovieTrailer(int movieID) async {
-  try {
-    final response = await _dio.get(
-      'movie/$movieID/videos',
-      queryParameters: {'api_key': apikey},
-    );
-    return _parseResponse(response.data, movieTrailerFromJson);
-  } on DioException catch (e) {
-    debugPrint('Error fetching movie trailer: ${e.message}');
-    return null;
+    try {
+      final response = await _dio.get(
+        'movie/$movieID/videos',
+        queryParameters: {'api_key': apikey},
+      );
+      return _parseResponse(response.data, movieTrailerFromJson);
+    } on DioException catch (e) {
+      debugPrint('Error fetching movie trailer: ${e.message}');
+      return null;
+    }
   }
-}
 
   Future<Map<String, dynamic>?> getExternalIds(int seriesId) async {
     try {
@@ -364,10 +363,4 @@ class ApiService {
       return null;
     }
   }
-
-
-
 }
-
-
-

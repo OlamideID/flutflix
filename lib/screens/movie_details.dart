@@ -10,7 +10,9 @@ import 'package:netflix/components/movies/movie_cast.dart';
 import 'package:netflix/components/movies/recommended_section.dart';
 import 'package:netflix/components/movies/similar_movies_section.dart';
 import 'package:netflix/models/movie_details_model.dart';
+import 'package:netflix/providers/movie_fav.dart';
 import 'package:netflix/providers/providers.dart';
+import 'package:netflix/screens/my_list.dart';
 import 'package:netflix/services/api_service.dart';
 import 'package:netflix/services/movie_streaming.dart';
 
@@ -51,7 +53,7 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
 
   @override
   void dispose() {
-    _trailerPlayer.dispose(); // Properly dispose of the YouTube player
+    _trailerPlayer.dispose();
     super.dispose();
   }
 
@@ -80,10 +82,109 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
     _trailerPlayer.playTrailer(context, youtubeKey);
   }
 
+  void _toggleMyList(Moviedetail movie) async {
+    final notifier = ref.read(myListNotifierProvider.notifier);
+    final isInListAsync = ref.read(isInMyListProvider(movie.id));
+
+    await isInListAsync.when(
+      loading: () async {
+        // Optional: Show a loading indicator or do nothing
+      },
+      error: (_, __) async {
+        final success = await notifier.addMovie(movie);
+
+        if (!mounted) return;
+
+        // Clear any existing SnackBars
+        ScaffoldMessenger.of(context).clearSnackBars();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? '${movie.title} Added to My List'
+                  : 'Failed to add ${movie.title} to My List',
+            ),
+            backgroundColor: success ? Colors.green : Colors.red,
+            behavior: SnackBarBehavior.floating,
+            action:
+                success
+                    ? SnackBarAction(
+                      label: 'View List',
+                      textColor: Colors.white,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MyListScreen(),
+                          ),
+                        );
+                      },
+                    )
+                    : null,
+          ),
+        );
+      },
+      data: (isInList) async {
+        bool success;
+        String message;
+
+        if (isInList) {
+          success = await notifier.removeMovie(movie.id);
+          message =
+              success
+                  ? '${movie.title} Removed from My List'
+                  : 'Failed to remove from My List';
+        } else {
+          success = await notifier.addMovie(movie);
+          message =
+              success
+                  ? '${movie.title} Added to My List'
+                  : '${movie.title} Failed to add to My List';
+        }
+
+        if (!mounted) return;
+
+        // Clear any existing SnackBars
+        ScaffoldMessenger.of(context).clearSnackBars();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: success ? Colors.green : Colors.red,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            behavior: SnackBarBehavior.floating,
+            action:
+                success && !isInList
+                    ? SnackBarAction(
+                      label: 'View List',
+                      textColor: Colors.white,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MyListScreen(),
+                          ),
+                        );
+                      },
+                    )
+                    : null,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_showTrailer) {
-      return _trailerPlayer.buildTrailerPlayer(_errorMessage, _isLoading, context);
+      return _trailerPlayer.buildTrailerPlayer(
+        _errorMessage,
+        _isLoading,
+        context,
+      );
     }
 
     final size = MediaQuery.of(context).size;
@@ -92,12 +193,13 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
 
     return movieAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Text(
-          'Error: $error',
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
+      error:
+          (error, _) => Center(
+            child: Text(
+              'Error: $error',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
       data: (movie) {
         if (movie == null) {
           return const Center(
@@ -166,18 +268,20 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
             CachedNetworkImage(
               imageUrl: imagePath != null ? "$imageUrl$imagePath" : '',
               fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: Colors.grey[800],
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: Colors.grey[800],
-                child: const Icon(
-                  Icons.error,
-                  color: Colors.white,
-                  size: 50,
-                ),
-              ),
+              placeholder:
+                  (context, url) => Container(
+                    color: Colors.grey[800],
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+              errorWidget:
+                  (context, url, error) => Container(
+                    color: Colors.grey[800],
+                    child: const Icon(
+                      Icons.error,
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                  ),
             ),
             Container(
               decoration: BoxDecoration(
@@ -199,52 +303,120 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _isLoading ? null : _startPlaying,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            icon: const Icon(Icons.play_arrow, size: 24),
-            label: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.black,
-                      strokeWidth: 2,
+    final movieAsync = ref.watch(movieDetailsProvider(widget.movieId));
+
+    return movieAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (movie) {
+        if (movie == null) return const SizedBox.shrink();
+
+        return Consumer(
+          builder: (context, ref, child) {
+            final isInListAsync = ref.watch(isInMyListProvider(widget.movieId));
+
+            return Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _startPlaying,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                  )
-                : const Text(
-                    'Watch Now',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    icon: const Icon(Icons.play_arrow, size: 24),
+                    label:
+                        _isLoading
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Text(
+                              'Watch Now',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                   ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            icon: const Icon(Icons.add, size: 24),
-            label: const Text(
-              'My List',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-      ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: isInListAsync.when(
+                    loading:
+                        () => ElevatedButton.icon(
+                          onPressed: null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[800],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          icon: const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          label: const Text(
+                            'Loading...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    error:
+                        (_, __) => ElevatedButton.icon(
+                          onPressed: () => _toggleMyList(movie),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[800],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          icon: const Icon(Icons.add, size: 24),
+                          label: const Text(
+                            'My List',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    data:
+                        (isInList) => ElevatedButton.icon(
+                          onPressed: () => _toggleMyList(movie),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isInList ? Colors.green[700] : Colors.grey[800],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          icon: Icon(
+                            isInList ? Icons.check : Icons.add,
+                            size: 24,
+                          ),
+                          label: Text(
+                            isInList ? 'In My List' : 'My List',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
