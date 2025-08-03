@@ -3,29 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
 import 'package:netflix/providers/providers.dart';
-import 'package:netflix/screens/movie_details.dart';
+import 'package:netflix/screens/series_detailscreen.dart';
 
-import '../../models/recommend_movies.dart';
+import '../../../models/similarseries.dart';
 
-class RecommendedMoviesSection extends ConsumerWidget {
-  const RecommendedMoviesSection({super.key, required this.movieId});
-  final int movieId;
+class SimilarSeriesSection extends ConsumerWidget {
+  const SimilarSeriesSection({super.key, required this.seriesId});
+  final int seriesId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recommendedMoviesAsync = ref.watch(
-      recommendedMoviesProvider(movieId),
-    );
+    final similarSeriesAsync = ref.watch(similarSeriesProvider(seriesId));
 
-    return recommendedMoviesAsync.when(
+    return similarSeriesAsync.when(
       loading:
           () => const Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator()),
           ),
       error: (error, _) => const SizedBox.shrink(),
-      data: (recommendedMovies) {
-        if (recommendedMovies == null || recommendedMovies.results.isEmpty) {
+      data: (similarSeries) {
+        if (similarSeries == null || similarSeries.results.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -35,7 +33,7 @@ class RecommendedMoviesSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Recommended For You',
+                'More Like This',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -47,10 +45,10 @@ class RecommendedMoviesSection extends ConsumerWidget {
                 height: 200,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: recommendedMovies.results.length,
+                  itemCount: similarSeries.results.length,
                   itemBuilder: (context, index) {
-                    final movie = recommendedMovies.results[index];
-                    return RecommendedMovieCard(movie: movie);
+                    final series = similarSeries.results[index];
+                    return SimilarSeriesCard(series: series);
                   },
                 ),
               ),
@@ -62,9 +60,9 @@ class RecommendedMoviesSection extends ConsumerWidget {
   }
 }
 
-class RecommendedMovieCard extends StatelessWidget {
-  const RecommendedMovieCard({super.key, required this.movie});
-  final Result movie;
+class SimilarSeriesCard extends StatelessWidget {
+  const SimilarSeriesCard({super.key, required this.series});
+  final Result series;
 
   @override
   Widget build(BuildContext context) {
@@ -73,18 +71,18 @@ class RecommendedMovieCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       child: InkWell(
         onTap: () {
-          print(movie.id);
+          print(series.id);
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => MovieDetailsScreen(movieId: movie.id),
+              builder: (context) => SeriesDetailsScreen(id: series.id),
             ),
           );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Poster
+            // Poster Image
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -94,7 +92,7 @@ class RecommendedMovieCard extends StatelessWidget {
             const SizedBox(height: 8),
             // Title
             Text(
-              movie.title,
+              series.title,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -113,9 +111,9 @@ class RecommendedMovieCard extends StatelessWidget {
   }
 
   Widget _buildPosterImage() {
-    if (movie.posterPath.isNotEmpty) {
+    if (series.posterPath != null && series.posterPath!.isNotEmpty) {
       return CachedNetworkImage(
-        imageUrl: "$imageUrl${movie.posterPath}",
+        imageUrl: "$imageUrl${series.posterPath}",
         fit: BoxFit.cover,
         width: double.infinity,
         placeholder: (context, url) => _buildPlaceholder(),
@@ -128,9 +126,7 @@ class RecommendedMovieCard extends StatelessWidget {
   Widget _buildPlaceholder() {
     return Container(
       color: Colors.grey[800],
-      child: const Center(
-        child: Icon(Icons.movie, color: Colors.white, size: 30),
-      ),
+      child: const Center(child: Icon(Icons.tv, color: Colors.white, size: 30)),
     );
   }
 
@@ -140,7 +136,9 @@ class RecommendedMovieCard extends StatelessWidget {
         const Icon(Icons.star, color: Colors.amber, size: 12),
         const SizedBox(width: 2),
         Text(
-          movie.voteAverage > 0 ? movie.voteAverage.toStringAsFixed(1) : 'N/A',
+          series.voteAverage > 0
+              ? series.voteAverage.toStringAsFixed(1)
+              : 'N/A',
           style: const TextStyle(color: Colors.grey, fontSize: 10),
         ),
       ],

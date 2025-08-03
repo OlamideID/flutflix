@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:netflix/components/movies/movie_card.dart';
+import 'package:netflix/components/movies/widgets/movie_card.dart';
 
 class MovieList extends StatelessWidget {
   final List movies;

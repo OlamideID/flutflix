@@ -5,7 +5,7 @@ import 'package:netflix/common/utils.dart';
 import 'package:netflix/providers/providers.dart';
 import 'package:netflix/screens/series_detailscreen.dart';
 
-import '../../models/recommended_series.dart';
+import '../../../models/recommended_series.dart';
 
 class RecommendedSeriesSection extends ConsumerWidget {
   const RecommendedSeriesSection({super.key, required this.seriesId});

@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:hive/hive.dart';
-import 'package:netflix/models/movie_details_model.dart';
+import 'package:netflix/components/movie_details/model/movie_details_model.dart';
 
 class MyListService {
   static const String _movieIdsKey = 'my_movie_ids';

@@ -17,7 +17,7 @@ class UpcomingMovie {
   int totalResults;
 
   UpcomingMovie({
-    this.dates, // Removed required
+    this.dates,
     required this.page,
     required this.results,
     required this.totalPages,

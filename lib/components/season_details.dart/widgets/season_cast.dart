@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:netflix/components/series/season_cast.dart';
+import 'package:netflix/components/series/widgets/season_cast.dart';
 
 class SeasonCastWidget extends StatelessWidget {
   final int seriesId;

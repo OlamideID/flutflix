@@ -3,27 +3,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
 import 'package:netflix/providers/providers.dart';
-import 'package:netflix/screens/series_detailscreen.dart';
+import 'package:netflix/screens/movie_details.dart';
 
-import '../../models/similarseries.dart';
+import '../models/recommend_movies.dart';
 
-class SimilarSeriesSection extends ConsumerWidget {
-  const SimilarSeriesSection({super.key, required this.seriesId});
-  final int seriesId;
+class RecommendedMoviesSection extends ConsumerWidget {
+  const RecommendedMoviesSection({super.key, required this.movieId});
+  final int movieId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final similarSeriesAsync = ref.watch(similarSeriesProvider(seriesId));
+    final recommendedMoviesAsync = ref.watch(
+      recommendedMoviesProvider(movieId),
+    );
 
-    return similarSeriesAsync.when(
+    return recommendedMoviesAsync.when(
       loading:
           () => const Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator()),
           ),
       error: (error, _) => const SizedBox.shrink(),
-      data: (similarSeries) {
-        if (similarSeries == null || similarSeries.results.isEmpty) {
+      data: (recommendedMovies) {
+        if (recommendedMovies == null || recommendedMovies.results.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -33,7 +35,7 @@ class SimilarSeriesSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'More Like This',
+                'Recommended For You',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -45,10 +47,10 @@ class SimilarSeriesSection extends ConsumerWidget {
                 height: 200,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: similarSeries.results.length,
+                  itemCount: recommendedMovies.results.length,
                   itemBuilder: (context, index) {
-                    final series = similarSeries.results[index];
-                    return SimilarSeriesCard(series: series);
+                    final movie = recommendedMovies.results[index];
+                    return RecommendedMovieCard(movie: movie);
                   },
                 ),
               ),
@@ -60,9 +62,9 @@ class SimilarSeriesSection extends ConsumerWidget {
   }
 }
 
-class SimilarSeriesCard extends StatelessWidget {
-  const SimilarSeriesCard({super.key, required this.series});
-  final Result series;
+class RecommendedMovieCard extends StatelessWidget {
+  const RecommendedMovieCard({super.key, required this.movie});
+  final Result movie;
 
   @override
   Widget build(BuildContext context) {
@@ -71,18 +73,18 @@ class SimilarSeriesCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       child: InkWell(
         onTap: () {
-          print(series.id);
+          print(movie.id);
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => SeriesDetailsScreen(id: series.id),
+              builder: (context) => MovieDetailsScreen(movieId: movie.id),
             ),
           );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Poster Image
+            // Poster
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -92,7 +94,7 @@ class SimilarSeriesCard extends StatelessWidget {
             const SizedBox(height: 8),
             // Title
             Text(
-              series.title,
+              movie.title,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -111,9 +113,9 @@ class SimilarSeriesCard extends StatelessWidget {
   }
 
   Widget _buildPosterImage() {
-    if (series.posterPath != null && series.posterPath!.isNotEmpty) {
+    if (movie.posterPath.isNotEmpty) {
       return CachedNetworkImage(
-        imageUrl: "$imageUrl${series.posterPath}",
+        imageUrl: "$imageUrl${movie.posterPath}",
         fit: BoxFit.cover,
         width: double.infinity,
         placeholder: (context, url) => _buildPlaceholder(),
@@ -126,7 +128,9 @@ class SimilarSeriesCard extends StatelessWidget {
   Widget _buildPlaceholder() {
     return Container(
       color: Colors.grey[800],
-      child: const Center(child: Icon(Icons.tv, color: Colors.white, size: 30)),
+      child: const Center(
+        child: Icon(Icons.movie, color: Colors.white, size: 30),
+      ),
     );
   }
 
@@ -136,9 +140,7 @@ class SimilarSeriesCard extends StatelessWidget {
         const Icon(Icons.star, color: Colors.amber, size: 12),
         const SizedBox(width: 2),
         Text(
-          series.voteAverage > 0
-              ? series.voteAverage.toStringAsFixed(1)
-              : 'N/A',
+          movie.voteAverage > 0 ? movie.voteAverage.toStringAsFixed(1) : 'N/A',
           style: const TextStyle(color: Colors.grey, fontSize: 10),
         ),
       ],

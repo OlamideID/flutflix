@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:netflix/components/movie_details/mobile.dart'
+import 'package:netflix/components/movie_details/widgets/mobile.dart'
     if (dart.library.html) 'package:netflix/components/movie_details/web.dart';
 
 class MovieTrailerPlayer {

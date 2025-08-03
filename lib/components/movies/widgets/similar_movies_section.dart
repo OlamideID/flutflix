@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
-import 'package:netflix/models/similarmovies.dart';
+import 'package:netflix/components/movies/models/similarmovies.dart';
 import 'package:netflix/providers/providers.dart';
 import 'package:netflix/screens/movie_details.dart';
 

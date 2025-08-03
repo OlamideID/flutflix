@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/models/person_search.dart'; // Add this import
-import 'package:netflix/models/search_movie.dart';
+import 'package:netflix/components/movies/models/search_movie.dart';
 import 'package:netflix/models/search_tv.dart';
 import 'package:netflix/providers/providers.dart';
 import 'package:netflix/screens/actor_profile_screen.dart';

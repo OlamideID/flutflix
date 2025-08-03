@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/models/movie_details_model.dart';
-import 'package:netflix/services/movie_fav.dart';
+import 'package:netflix/components/movie_details/model/movie_details_model.dart';
+import 'package:netflix/components/movie_details/services/movie_fav.dart';
 
 final myListServiceProvider = Provider<MyListService>((ref) => MyListService());
 

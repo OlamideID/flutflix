@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/models/actor_credits.dart';
-import 'package:netflix/models/actor_profile.dart';
+import 'package:netflix/components/actor_profile/model/actor_profile.dart';
 import 'package:netflix/screens/movie_details.dart';
 import 'package:netflix/screens/series_detailscreen.dart';
 import 'package:netflix/services/api_service.dart';

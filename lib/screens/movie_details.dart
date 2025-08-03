@@ -3,18 +3,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
-import 'package:netflix/components/movie_details/trailer_player.dart';
-import 'package:netflix/components/movie_details/trailer_section.dart';
-import 'package:netflix/components/movie_details/widgets.dart';
-import 'package:netflix/components/movies/movie_cast.dart';
-import 'package:netflix/components/movies/recommended_section.dart';
-import 'package:netflix/components/movies/similar_movies_section.dart';
-import 'package:netflix/models/movie_details_model.dart';
+import 'package:netflix/components/movie_details/model/movie_details_model.dart';
+import 'package:netflix/components/movie_details/widgets/trailer_player.dart';
+import 'package:netflix/components/movie_details/widgets/trailer_section.dart';
+import 'package:netflix/components/movie_details/widgets/widgets.dart';
+import 'package:netflix/components/movies/widgets/movie_cast.dart';
+import 'package:netflix/components/movies/widgets/recommended_section.dart';
+import 'package:netflix/components/movies/widgets/similar_movies_section.dart';
 import 'package:netflix/providers/movie_fav.dart';
 import 'package:netflix/providers/providers.dart';
 import 'package:netflix/screens/my_list.dart';
 import 'package:netflix/services/api_service.dart';
-import 'package:netflix/services/movie_streaming.dart';
+import 'package:netflix/components/movie_details/services/movie_streaming.dart';
 
 final movieDetailsProvider = FutureProvider.family<Moviedetail?, int>((
   ref,

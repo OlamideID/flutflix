@@ -1,30 +1,30 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:netflix/components/movie_details/model/movie_details_model.dart';
+import 'package:netflix/components/movies/models/movie_credits.dart';
+import 'package:netflix/components/movies/models/movie_model.dart';
+import 'package:netflix/components/movies/models/movie_trailer.dart';
 import 'package:netflix/models/actor_credits.dart';
-import 'package:netflix/models/actor_profile.dart';
+import 'package:netflix/components/actor_profile/model/actor_profile.dart';
 import 'package:netflix/models/airing_today_tv.dart';
 import 'package:netflix/models/episode_details.dart';
-import 'package:netflix/models/movie_credits.dart';
-import 'package:netflix/models/movie_details_model.dart';
-import 'package:netflix/models/movie_model.dart';
-import 'package:netflix/models/movie_trailer.dart';
 import 'package:netflix/models/popular_series.dart';
-import 'package:netflix/models/recommend_movies.dart';
+import 'package:netflix/components/movies/models/recommend_movies.dart';
 import 'package:netflix/models/recommended_series.dart';
 import 'package:netflix/models/series_details.dart';
-import 'package:netflix/models/similarmovies.dart';
+import 'package:netflix/components/movies/models/similarmovies.dart';
 import 'package:netflix/models/similarseries.dart';
-import 'package:netflix/models/top_rated.dart';
-import 'package:netflix/models/trending.dart';
+import 'package:netflix/components/movies/models/top_rated.dart';
+import 'package:netflix/components/movies/models/trending.dart';
 import 'package:netflix/models/tv_credits.dart';
 import 'package:netflix/models/tv_season_cast.dart';
-import 'package:netflix/models/up_coming_model.dart';
+import 'package:netflix/components/movies/models/up_coming_model.dart';
 import 'package:netflix/services/api_service.dart';
 
 final dioProvider = Provider<Dio>((ref) => Dio());
 
 final apiServiceProvider = Provider<ApiService>((ref) {
-  return ApiService(); // No need to pass Dio since it's created internally
+  return ApiService();
 });
 
 final trendingMoviesProvider = FutureProvider<Trending?>((ref) async {

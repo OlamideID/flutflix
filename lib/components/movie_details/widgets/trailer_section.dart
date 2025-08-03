@@ -2,7 +2,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/models/movie_trailer.dart';
+import 'package:netflix/components/movies/models/movie_trailer.dart';
 
 class MovieTrailerSection extends StatelessWidget {
   final AsyncValue<MovieTrailer?> trailerAsync;

@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/common/utils.dart';
-import 'package:netflix/components/series/series_card.dart';
+import 'package:netflix/components/series/widgets/series_card.dart';
 import 'package:netflix/helpers/helpers.dart';
 import 'package:netflix/screens/series_detailscreen.dart';
 import 'package:netflix/services/api_service.dart';
