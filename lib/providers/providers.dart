@@ -189,24 +189,3 @@ final personCreditsProvider = FutureProvider.family<ActorCredits, int>((
   return api.getPersonCredits(personId);
 });
 
-enum SearchType { movie, tv, person }
-
-final searchTypeProvider = StateProvider<SearchType>((ref) => SearchType.movie);
-final searchQueryProvider = StateProvider<String>((ref) => "");
-
-final searchResultsProvider = FutureProvider((ref) async {
-  final query = ref.watch(searchQueryProvider);
-  final type = ref.watch(searchTypeProvider);
-  final api = ref.read(apiServiceProvider);
-
-  if (query.trim().isEmpty) return null;
-
-  switch (type) {
-    case SearchType.movie:
-      return await api.searchMovies(query);
-    case SearchType.tv:
-      return await api.searchTVSeries(query);
-    case SearchType.person:
-      return await api.searchPerson(query);
-  }
-});
