@@ -2,6 +2,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:netflix/screens/splash.dart';
@@ -9,13 +10,13 @@ import 'package:netflix/screens/splash.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive
+  await dotenv.load(fileName: ".env"); 
+
   await Hive.initFlutter();
 
-  // Open boxes for your services
   try {
-    await Hive.openBox('myListBox'); // For MyListService
-    await Hive.openBox('seriesFavoritesBox'); // For SeriesFavoritesService
+    await Hive.openBox('myListBox'); 
+    await Hive.openBox('seriesFavoritesBox'); 
   } catch (e) {
     debugPrint('Error opening Hive boxes: $e');
   }

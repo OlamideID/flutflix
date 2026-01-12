@@ -1,6 +1,6 @@
 // movie_details_widgets.dart
 import 'package:flutter/material.dart';
-import 'package:netflix/components/movie_details/model/movie_details_model.dart';
+import 'package:netflix/features/movie_details/model/movie_details_model.dart';
 
 class MovieDetailsHeader extends StatelessWidget {
   final Moviedetail movie;

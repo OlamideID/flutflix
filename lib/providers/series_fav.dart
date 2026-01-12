@@ -1,7 +1,7 @@
 // providers/series_fav_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:netflix/models/series_details.dart';
-import 'package:netflix/components/series/services/series_fav.dart';
+import 'package:netflix/features/series/services/series_fav.dart';
 
 final seriesFavoritesServiceProvider = Provider<SeriesFavoritesService>((ref) => SeriesFavoritesService());
 

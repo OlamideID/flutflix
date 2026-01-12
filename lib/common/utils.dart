@@ -1,5 +1,7 @@
-const apikey = "af6748eaa34a9c773409dfb22f6c3851";
-const baseUrl = 'https://api.themoviedb.org/3/';
-const imageUrl = 'https://image.tmdb.org/t/p/original';
-const imageUrl2 = 'https://image.tmdb.org/t/p/w500';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+final String apikey = dotenv.env['TMDB_API_KEY'] ?? '';
+
+const String baseUrl = 'https://api.themoviedb.org/3/';
+const String imageUrl = 'https://image.tmdb.org/t/p/original';
+const String imageUrl2 = 'https://image.tmdb.org/t/p/w500';

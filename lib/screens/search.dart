@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/movies/models/search_movie.dart';
+import 'package:netflix/features/movies/models/search_movie.dart';
 import 'package:netflix/models/person_search.dart';
 import 'package:netflix/models/search_tv.dart';
 import 'package:netflix/providers/search.dart';

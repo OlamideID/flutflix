@@ -2,13 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:netflix/components/series/widgets/episode_card.dart';
-import 'package:netflix/components/series/widgets/header_section.dart';
-import 'package:netflix/components/series/widgets/info_card.dart';
-import 'package:netflix/components/series/widgets/recommendedseries.dart';
-import 'package:netflix/components/series/widgets/season_card.dart';
-import 'package:netflix/components/series/widgets/series_cast.dart';
-import 'package:netflix/components/series/widgets/similar_series.dart';
+import 'package:netflix/features/series/widgets/episode_card.dart';
+import 'package:netflix/features/series/widgets/header_section.dart';
+import 'package:netflix/features/series/widgets/info_card.dart';
+import 'package:netflix/features/series/widgets/recommendedseries.dart';
+import 'package:netflix/features/series/widgets/season_card.dart';
+import 'package:netflix/features/series/widgets/series_cast.dart';
+import 'package:netflix/features/series/widgets/similar_series.dart';
 import 'package:netflix/models/series_details.dart';
 import 'package:netflix/providers/series_fav.dart';
 import 'package:netflix/screens/my_list.dart';

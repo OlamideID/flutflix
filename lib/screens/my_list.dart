@@ -7,8 +7,8 @@ import 'package:netflix/providers/movie_fav.dart';
 import 'package:netflix/providers/series_fav.dart';
 import 'package:netflix/screens/movie_details.dart';
 import 'package:netflix/screens/series_detailscreen.dart';
-import 'package:netflix/components/movie_details/services/movie_fav.dart';
-import 'package:netflix/components/series/services/series_fav.dart';
+import 'package:netflix/features/movie_details/services/movie_fav.dart';
+import 'package:netflix/features/series/services/series_fav.dart';
 
 enum FavoriteType { movies, series }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; 
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:netflix/constants/colors.dart';
@@ -19,16 +20,21 @@ class NavBarScreen extends StatefulWidget {
 
 class _NavBarScreenState extends State<NavBarScreen> {
   int _selectedIndex = 0;
-
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+    
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ));
+
     _screens = [
       NetflixHome(
         search: () {
-          _onTabChange(1); // ✅ Switch to Search screen
+          _onTabChange(1);
         },
       ),
       const SearchScreen(),
@@ -59,7 +65,6 @@ class _NavBarScreenState extends State<NavBarScreen> {
         ],
       ),
       child: SafeArea(
-        top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           child: GNav(
@@ -88,32 +93,35 @@ class _NavBarScreenState extends State<NavBarScreen> {
   }
 
   Widget _buildAndroidNavBar() {
-    return CurvedNavigationBar(
-      index: _selectedIndex,
-      height: 60,
-      backgroundColor: Colors.transparent,
-      color: Colors.black87,
-      buttonBackgroundColor: Colors.redAccent,
-      animationDuration: const Duration(milliseconds: 300),
-      animationCurve: Curves.easeInOut,
-      onTap: _onTabChange,
-      items: const [
-        Icon(Iconsax.home, size: 26, color: Colors.white),
-        Icon(Iconsax.search_normal, size: 26, color: Colors.white),
-        Icon(Icons.photo_library, size: 26, color: Colors.white),
-      ],
+    return SafeArea(
+      top: false,
+      child: CurvedNavigationBar(
+        index: _selectedIndex,
+        height: 60,
+        backgroundColor: Colors.transparent,
+        color: Colors.black87,
+        buttonBackgroundColor: Colors.redAccent,
+        animationDuration: const Duration(milliseconds: 300),
+        animationCurve: Curves.easeInOut,
+        onTap: _onTabChange,
+        items: const [
+          Icon(Iconsax.home, size: 26, color: Colors.white),
+          Icon(Iconsax.search_normal, size: 26, color: Colors.white),
+          Icon(Icons.photo_library, size: 26, color: Colors.white),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true, 
       backgroundColor: Colorss.scaffoldBg,
       body: _screens[_selectedIndex],
-      bottomNavigationBar:
-          kIsWeb
-              ? _buildWebNavBar()
-              : Platform.isAndroid
+      bottomNavigationBar: kIsWeb
+          ? _buildWebNavBar()
+          : Platform.isAndroid
               ? _buildAndroidNavBar()
               : _buildWebNavBar(),
     );
